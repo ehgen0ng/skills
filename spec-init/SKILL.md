@@ -45,7 +45,7 @@ git branch -M main
 ```
 
 - 如果没有远程仓库，提示用户稍后添加 `origin`，但不阻塞 Spec 基础设施初始化
-- 如果当前分支不是 `main`，只记录现状，不强制切换；后续 `spec-start` 会按 GitHub Flow 创建工作分支
+- 如果当前分支不是 `main`，只记录现状，不强制切换
 
 ### 步骤 2：询问项目基本信息
 
@@ -148,18 +148,6 @@ mkdir -p ".agents/rules"
 - 使用 `[[wikilink]]` 建立文档关联
 - 每个文档包含完整 YAML frontmatter
 - 长篇背景写入 `spec/context/knowledge/`，不要塞进 AGENTS.md
-```
-
-创建 `.agents/rules/git-workflow.md`（GitHub Flow 规范）：
-```markdown
-# GitHub Flow 规范
-
-- 每个新 Spec 从 main 创建短生命周期分支
-- 同一活跃 Spec 的 update 复用原 Spec 分支
-- 禁止直接在 main 上实现、测试或归档 Spec
-- writer/plan.md / updater/update-xxx.md 必须记录 git_branch、base_branch、pr_url
-- 收尾时提交、推送当前分支并创建 PR
-- PR 合并后同步 main 并删除本地/远程工作分支
 ```
 
 > [!tip] rules/ 每文件 ≤ 20 行
@@ -277,7 +265,6 @@ mkdir -p ".agents/hooks"
 
 Hook 只自动记录事实：
 - 文件创建/修改、artifact 状态、`updated_at`
-- Git/PR 元数据
 - agent runtime handle
 - 当前角色自己的 `Task Progress`
 - 问题发现/解决文件对应的 `Problem Resolution Log` 初始行或状态
@@ -406,8 +393,7 @@ mkdir -p ".obsidian"
 │   │   ├── coding-style.md          # 编码风格
 │   │   ├── project-preferences.md   # 项目偏好/产品体验/前端风格
 │   │   ├── spec-workflow.md         # Spec 工作流规范
-│   │   ├── documentation.md         # 文档规范
-│   │   └── git-workflow.md          # GitHub Flow 规范
+│   │   └── documentation.md         # 文档规范
 │   ├── roles/                       # CLI 中立项目级角色定义
 │   │   ├── spec-explorer.md
 │   │   ├── spec-writer.md
@@ -434,7 +420,6 @@ mkdir -p ".obsidian"
 │       ├── exp-reflect/SKILL.md
 │       ├── exp-write/SKILL.md
 │       ├── intent-confirmation/SKILL.md
-│       ├── git-work/SKILL.md
 │       ├── skill-creator/SKILL.md
 │       ├── find-skills/SKILL.md
 │       ├── obsidian-markdown/SKILL.md
@@ -509,7 +494,7 @@ mkdir -p ".obsidian"
 初始化完成后确认：
 1. Git 仓库状态已检查；如用户确认，已完成 `git init` + `main` 分支初始化
 2. AGENTS.md 已创建（项目身份 + 入口清单 + 路由）
-3. .agents/rules/ 已创建（编码规范 + 项目偏好 + Spec 工作流 + 文档规范 + GitHub Flow）
+3. .agents/rules/ 已创建（编码规范 + 项目偏好 + Spec 工作流 + 文档规范）
 4. .agents/skills/ 已安装或引导安装
 5. .agents/roles/ 已创建（7 个项目级角色定义）
 6. .agents/hooks/ 已创建（中立 Hook 协议；运行时适配按当前 CLI 能力生成或降级跳过）

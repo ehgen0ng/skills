@@ -10,7 +10,7 @@ Use these definitions when `spec-init` creates project-level roles. The source o
 - Cross-role communication goes through TeamLead by default. A role may name intended downstream recipients in its output, but it must not assume direct agent-to-agent messaging.
 - Role instances should remain resumable during one Spec run when the runtime supports agent threads. If a role thread is unavailable, restart the same project-level role and rebuild context from persisted Spec artifacts.
 - Runtime handles for spawned role instances must be recorded in the current Spec's `lead/team-context.md` by TeamLead. Treat `agent_id`, `thread_id`, and `session_id` as runtime-local handles, not durable role identities.
-- TeamLead owns the structure and control-plane sections of `lead/team-context.md`: frontmatter, run path, Git/PR metadata, runtime handles, artifact registry, gate decisions, handoffs, blockers, and next action.
+- TeamLead owns the structure and control-plane sections of `lead/team-context.md`: frontmatter, run path, runtime handles, artifact registry, gate decisions, handoffs, blockers, and next action.
 - All roles may directly maintain the shared completion sections in `lead/team-context.md`: `Task Progress` for their own completed work, and `Problem Resolution Log` for issues they found or resolved. Do not edit other roles' rows.
 - Non-Lead roles must not edit any other `lead/team-context.md` sections. They return control-plane changes, handoff requests, and blocker updates to TeamLead.
 - If hooks are configured, they must follow `.agents/hooks/team-context-hook-contract.md`: hooks record factual events only, while TeamLead and roles remain responsible for workflow semantics.
@@ -89,7 +89,7 @@ the active thread with `/agent`.
 role_id: spec-explorer
 required_skill: spec-explore
 purpose: Spec 创建前的信息收集与探索。
-activation: TeamLead 在需求对齐和分支准备后启动。
+activation: TeamLead 在需求对齐后启动。
 inputs:
   - task_description
   - exploration_scope
@@ -187,7 +187,7 @@ handoff:
 rules:
   - 不添加 writer/plan.md 未定义的功能。
   - 不编写或执行测试；测试由 spec-tester 负责。
-  - 不归档、不提交、不推送。
+  - 不归档。
   - 完成后只通知 TeamLead。
 ```
 
@@ -252,7 +252,7 @@ rules:
 ```yaml
 role_id: spec-ender
 required_skill: spec-end
-purpose: 完成 Spec 收尾、经验沉淀、规范审查、归档和 PR 流程。
+purpose: 完成 Spec 收尾、经验沉淀、规范审查和归档。
 activation: TeamLead 在测试报告确认后启动。
 inputs:
   - current spec_dir
@@ -270,16 +270,14 @@ outputs:
   - updated experience or knowledge entries when exp-reflect routes them
   - optional AGENTS.md or .agents/rules updates
   - archived Spec directory
-  - commit, push, PR or compare URL
 handoff:
   to: TeamLead
   includes:
     - final status
     - archive path
-    - PR URL when available
 rules:
   - 需要多角色素材时向 TeamLead 请求收集或恢复相应角色线程。
   - 规范维护只写长期规则，不写一次性实现细节。
-  - 归档、提交、推送、创建 PR 前必须等待用户确认。
+  - 归档前必须等待用户确认。
   - 完成后通知 TeamLead 本次 Spec 团队实例结束；项目级角色定义保留。
 ```

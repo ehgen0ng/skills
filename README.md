@@ -2,7 +2,7 @@
 
 ## 概述
 
-**R&K Flow** 是一套完整的 Spec 驱动式开发 Skills 体系，通过 **Obsidian** 管理文档，用 **Agent Teams 多角色协作架构** 驱动开发流程。当前版本将开发拆分为 5 个阶段，由 7 个项目级专职角色分工协作，并通过每个 Spec 的 `lead/team-context.md` 保留运行账本、Git/PR 元数据、跨角色交接和问题闭环。
+**R&K Flow** 是一套完整的 Spec 驱动式开发 Skills 体系，通过 **Obsidian** 管理文档，用 **Agent Teams 多角色协作架构** 驱动开发流程。当前版本将开发拆分为 5 个阶段，由 7 个项目级专职角色分工协作，并通过每个 Spec 的 `lead/team-context.md` 保留运行账本、跨角色交接和问题闭环。
 
 
 如果你对该工作流感兴趣,或者有疑问,欢迎加入我们的社群讨论
@@ -36,7 +36,7 @@ rk-flow init
 > - 7 个项目级专职角色：探索、设计、测试、实现、调试、审查、收尾
 > - 角色（Who）与 Skill（How）分离
 > - 5 阶段流程，每个阶段转换有用户确认门禁
-> - 通过 `lead/team-context.md` 记录运行路径、角色实例、产物、完成项、问题解决和 PR 状态
+> - 通过 `lead/team-context.md` 记录运行路径、角色实例、产物、完成项和问题解决
 
 
 ## 架构概览
@@ -54,8 +54,6 @@ rk-flow init
 │  │ TeamLead + intent-confirmation → 用户确认                │              │
 │  └────────────────────────┬────────────────────────────────┘              │
 │      ↓ 【门禁 1：需求理解正确】                                             │
-│  GitHub Flow：git-work 从 main 创建 Spec 工作分支                           │
-│      ↓                                                                    │
 │  ┌─────────────────────────────────────────────────────────┐              │
 │  │ 阶段二：Spec 创建                                        │              │
 │  │ spec-explorer → explorer/exploration-report.md            │              │
@@ -77,7 +75,7 @@ rk-flow init
 │  ┌─────────────────────────────────────────────────────────┐              │
 │  │ 阶段五：收尾                                              │              │
 │  │ spec-reviewer 可选审查 → spec-ender + exp-reflect         │              │
-│  │ → 规范维护审查 → 归档 → 推送 PR                            │              │
+│  │ → 规范维护审查 → 归档                                     │              │
 │  └─────────────────────────────────────────────────────────┘              │
 │                                                                           │
 ├───────────────────────────────────────────────────────────────────────────┤
@@ -166,30 +164,16 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/lead/team-context.md
 
 `lead/team-context.md` 记录：
 - 当前任务实际运行路径、阶段和门禁状态
-- `git_branch`、`base_branch`、`pr_url`
 - 角色 runtime handle（如 `agent_id`、`thread_id`、`session_id`）
 - 产物注册表、跨角色 handoff、开放问题和下一步动作
 - 共享完成区：`Task Progress`
 - 共享问题区：`Problem Resolution Log`
 
 维护边界：
-- TeamLead 维护 frontmatter、运行路径、Git/PR 元数据、Runtime Handles、Artifact Registry、Gate Decisions、Handoffs、Open Questions / Blockers、Next Action。
+- TeamLead 维护 frontmatter、运行路径、Runtime Handles、Artifact Registry、Gate Decisions、Handoffs、Open Questions / Blockers、Next Action。
 - 所有角色可共同维护 `Task Progress`，但只追加或更新自己负责的任务行。
 - 发现或解决问题的角色可共同维护 `Problem Resolution Log`，但只追加或更新自己相关的问题行。
 - Hook 只自动记录事实事件，不推断业务结论、门禁决策、handoff 原因或下一步动作。
-
-### GitHub Flow 约定
-
-R&K Flow 把 GitHub Flow 作为 Spec 生命周期的一部分，而不是最后一步提交动作。
-
-| 时机 | Git 动作 | 记录位置 |
-|------|----------|----------|
-| `spec-start` | 从 `main` 创建 Spec 工作分支 | `lead/team-context.md` 的 `git_branch` / `base_branch` |
-| `spec-update` | 复用并校验当前 Spec 工作分支 | 读取 `lead/team-context.md`，更新 `updater/update-xxx.md` |
-| `spec-end` | 归档后提交、推送、创建 PR | `lead/team-context.md` 的 `pr_url` |
-| update 收尾 | 提交、推送当前 Spec 分支；必要时创建/更新 PR，不归档 | `lead/team-context.md` 的 `pr_url` |
-
-分支命名使用 `<type>/spec-<YYYYMMDD-HHMM>-<ascii-slug>`，例如 `feat/spec-20260109-1430-evaluator-agent`。多个 Spec 并发开发时使用 `git worktree`，每个 Spec 独占工作目录和分支。
 
 ### 角色与 Skill 对照
 
@@ -204,7 +188,7 @@ R&K Flow 明确区分**角色**（Who）和 **Skill**（How）。角色是 Agent
 | spec-executor | `spec-execute` | `executor/summary.md` | 阶段三 |
 | spec-debugger | `spec-debug` | `debugger/debug-xxx.md`, `debugger/debug-xxx-fix.md` | 阶段三/四（按需） |
 | spec-reviewer | `spec-review` | `reviewer/review.md`, `reviewer/update-xxx-review.md` | 阶段四后（可选） |
-| spec-ender | `spec-end` | `ender/end-report.md` + 经验沉淀 + 规范维护 + 归档 + 推送 PR | 阶段五 |
+| spec-ender | `spec-end` | `ender/end-report.md` + 经验沉淀 + 规范维护 + 归档 | 阶段五 |
 
 ### 初始化
 
@@ -213,7 +197,6 @@ R&K Flow 明确区分**角色**（Who）和 **Skill**（How）。角色是 Agent
 每次开始新任务时，调用 `spec-start` 启动 Agent Teams：
 
 ```text
-创建分支：<type>/spec-{YYYYMMDD-HHMM}-{ascii-slug}
 创建团队：spec-{YYYYMMDD-HHMM}-{任务简称}
 团队说明：Spec 驱动开发: {任务描述}
 创建目录：lead/ explorer/ writer/ tester/ executor/ debugger/ reviewer/ updater/ ender/
@@ -230,15 +213,15 @@ R&K Flow 明确区分**角色**（Who）和 **Skill**（How）。角色是 Agent
 | Skill | 对应角色 | 功能 | 使用场景 |
 |-------|---------|------|----------|
 | `spec-init` | TeamLead | Git 仓库检查 + 完整项目骨架搭建（AGENTS.md + rules + skills + roles + hooks + spec/ + Obsidian Vault） | 新项目首次使用，一次性 |
-| `spec-start` | TeamLead | 创建 Spec 工作分支、角色目录和 `lead/team-context.md`，加载 7 个项目级角色 | 每次开始新开发任务 |
+| `spec-start` | TeamLead | 创建角色目录和 `lead/team-context.md`，加载 7 个项目级角色 | 每次开始新开发任务 |
 | `spec-explore` | spec-explorer | Spec 前置信息收集（经验检索 + 代码探索） | Spec 创建前的背景调研 |
 | `spec-write` | spec-writer | 撰写 `writer/plan.md`（纯代码实现计划，不含测试） | 创建新功能 Spec |
 | `spec-test` | spec-tester | 按场景策略撰写 `tester/test-plan.md` + 执行测试产出 `tester/test-report.md` | 测试计划和测试执行 |
 | `spec-execute` | spec-executor | 严格按 `writer/plan.md` 实现代码，产出 `executor/summary.md` | 新功能开发 |
 | `spec-debug` | spec-debugger | 诊断并修复 bug，产出 debug 文档 | 测试发现问题时 |
 | `spec-review` | spec-reviewer | 审查实现情况，产出 `reviewer/review.md` | 可选：验证是否严格遵循 Spec |
-| `spec-end` | spec-ender | 多角色讨论 + 经验沉淀 + 规范维护 + 归档 + 推送 PR，产出 `ender/end-report.md` | 开发周期收尾 |
-| `spec-update` | — | 在当前 Spec 分支内执行小更新，产出 `updater/update-xxx.md` 与 `updater/update-xxx-summary.md` | 修改同一活跃 Spec 的既有功能（不归档） |
+| `spec-end` | spec-ender | 多角色讨论 + 经验沉淀 + 规范维护 + 归档，产出 `ender/end-report.md` | 开发周期收尾 |
+| `spec-update` | — | 对当前 Spec 执行小更新，产出 `updater/update-xxx.md` 与 `updater/update-xxx-summary.md` | 修改同一活跃 Spec 的既有功能（不归档） |
 
 #### 新功能开发流程（5 阶段）
 
@@ -247,10 +230,8 @@ R&K Flow 明确区分**角色**（Who）和 **Skill**（How）。角色是 Agent
   TeamLead（当前 Agent）→ intent-confirmation → 用户确认
       ↓ 【门禁 1】
 
-GitHub Flow 准备
-  TeamLead → git-work → 从 main 创建 Spec 工作分支
+团队初始化
   TeamLead → 创建角色目录与 lead/team-context.md
-  TeamLead → 在 lead/team-context.md 记录 git_branch / base_branch / pr_url
       ↓
 
 阶段二：Spec 创建
@@ -278,7 +259,6 @@ GitHub Flow 准备
 阶段五：收尾
   TeamLead → spec-ender 开始
   spec-ender → ender/end-report.md + 多角色讨论 + exp-reflect → 规范维护审查 → 用户确认归档
-  spec-ender → git-work 提交 + 推送 + 创建 PR
   spec-ender → 通知 TeamLead，Teams 进入待机
 
 可选：用户可在任意时刻调用 spec-review 进行详细审查
@@ -315,12 +295,10 @@ spec-tester 验证通过 → 记录到 tester/test-report.md
 
 #### 功能更新流程
 
-适用场景：同一个活跃 Spec 在当前工作分支内需要小迭代、补充需求、修正方案或优化实现。若原 Spec 分支已合并/关闭，后续需求默认新建 Spec。
+适用场景：同一个活跃 Spec 需要小迭代、补充需求、修正方案或优化实现。
 
 ```
 同一活跃 Spec 的需求/设计发生小变化（原 `writer/plan.md` + `executor/summary.md` 已存在）
-    ↓
-git-work 确认当前分支等于 lead/team-context.md 的 git_branch
     ↓
 spec-update 创建 updater/update-xxx.md（放在原 Spec 的 updater/ 目录）
     ↓
@@ -333,8 +311,6 @@ spec-update 创建 updater/update-xxx-summary.md
 spec-review 创建 reviewer/update-xxx-review.md + 用户确认
     ↓
 exp-reflect 经验反思 + 规范维护审查
-    ↓
-git-work 提交 + 推送当前 Spec 分支；必要时创建/更新 PR
     ↓
 完成（不归档，保留在原目录）
 
@@ -368,7 +344,6 @@ git-work 提交 + 推送当前 Spec 分支；必要时创建/更新 PR
 | Skill | 功能 | 在 Spec 流程中的作用 |
 |-------|------|---------------------|
 | `intent-confirmation` | 确认用户意图 | **在执行任务前**避免理解偏差，确保 Agent 正确理解需求 |
-| `git-work` | GitHub Flow 分支/PR 规范 | Spec 开始时创建工作分支，收尾时提交、推送、创建 PR |
 | `skill-creator` | 创建新 Skill 的指南 | 扩展能力时参考 |
 | `find-skills` | 搜索和安装开源 Skill | 从 skills.sh 生态发现新能力 |
 
@@ -398,7 +373,7 @@ spec/
 ```
 spec/分类目录/YYYYMMDD-HHMM-任务描述/
 ├── lead/
-│   └── team-context.md        # TeamLead 维护的运行账本与 Git/PR 元数据
+│   └── team-context.md        # TeamLead 维护的运行账本
 ├── explorer/
 │   └── exploration-report.md  # 探索报告（spec-explore 创建）
 ├── writer/
@@ -423,7 +398,7 @@ spec/分类目录/YYYYMMDD-HHMM-任务描述/
     └── end-report.md          # 收尾报告（spec-end 创建）
 ```
 
-外层目录分类的是“这个 Spec 作为一件工作的主意图”；目录内部按角色目录保存生命周期产物，根目录不再平铺角色产物。`03-能力交付` 只用于新增用户可感知能力；修复、优化、重构、技术债默认优先考虑 `04-系统改进`；架构和数据模型优先考虑 `02-技术设计`；独立测试工作优先考虑 `05-验证工程`。同一活跃 Spec 分支内的小变化使用 `spec-update` 留在原目录；已合并/已关闭后的新需求默认新建 Spec。
+外层目录分类的是“这个 Spec 作为一件工作的主意图”；目录内部按角色目录保存生命周期产物，根目录不再平铺角色产物。`03-能力交付` 只用于新增用户可感知能力；修复、优化、重构、技术债默认优先考虑 `04-系统改进`；架构和数据模型优先考虑 `02-技术设计`；独立测试工作优先考虑 `05-验证工程`。同一活跃 Spec 的小变化使用 `spec-update` 留在原目录。
 
 ## Obsidian 在 Spec 流程中的关键作用
 
@@ -469,7 +444,7 @@ related: []
 ---
 ```
 
-Git/PR 元数据统一记录在 `lead/team-context.md`，角色产物只链接 Team Context，不复制运行状态正文。
+运行状态统一记录在 `lead/team-context.md`，角色产物只链接 Team Context，不复制运行状态正文。
 
 **优势**：
 - 支持结构化查询和过滤
@@ -529,7 +504,7 @@ views:
 | **门禁 3：实现确认** | 阶段三完成 | TeamLead | `executor/summary.md` |
 | **门禁 4：测试确认** | 阶段四完成 | TeamLead | `tester/test-report.md` + 可选 `reviewer/review.md` |
 | **诊断确认** | bug 诊断完成 | TeamLead | `debugger/debug-xxx.md`（如有） |
-| **归档确认** | 阶段五 | spec-ender | 是否归档 + 提交 + 推送 + 创建 PR |
+| **归档确认** | 阶段五 | spec-ender | 是否归档 |
 
 ### 确认示例
 
@@ -562,7 +537,6 @@ views:
 TeamLead（当前 Agent）：
 调用 spec-start，建立协作上下文 "spec-20260109-1430-专业评价Agent"
 使用 intent-confirmation 与用户对齐需求...
-调用 git-work，从 main 创建分支 feat/spec-20260109-1430-evaluator-agent
 创建角色目录和 lead/team-context.md...
 加载 7 个项目级角色...
 ```
@@ -629,11 +603,11 @@ spec-ender：
   调用 exp-reflect 分流沉淀
   审查是否需要维护 AGENTS.md / .agents/rules/
   创建 ender/end-report.md
-  询问用户：是否归档、提交、推送并创建 PR？
+  询问用户：是否归档？
 
 用户：确认归档
 
-spec-ender → 移动到 06-已归档 → 调用 git-work 提交、推送、创建 PR
+spec-ender → 移动到 06-已归档
 spec-ender → 通知 TeamLead，Teams 进入待机
 ```
 
@@ -923,14 +897,14 @@ created: YYYY-MM-DD
 # 在支持 Skills 的 CLI 中调用
 
 /spec-init        # 项目初始化（一次性）
-/spec-start       # 创建 Spec 分支、角色目录和 Team Context，并启动 Agent Teams
+/spec-start       # 创建角色目录和 Team Context，并启动 Agent Teams
 /spec-explore     # 前置信息收集
 /spec-write       # 撰写设计方案
 /spec-test        # 撰写测试计划 / 执行测试
 /spec-execute     # 执行新功能开发
 /spec-debug       # 诊断并修复问题
-/spec-end         # 收尾（经验沉淀 + 归档 + 推送 PR）
-/spec-update      # 在当前 Spec 分支内执行小更新
+/spec-end         # 收尾（经验沉淀 + 归档）
+/spec-update      # 对当前 Spec 执行小更新
 /spec-review      # 审查实现情况
 
 /exp-search       # 检索历史经验

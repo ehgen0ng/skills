@@ -7,7 +7,7 @@ description: >
   (3) 当前 Spec 目录下需要新建 writer/plan.md。
   注意：v2.0 起 writer/plan.md 不含测试计划章节（由 spec-tester 用 spec-test 单独创建），
   execution_mode 固定为 single-agent，且仅表示实现阶段执行模式，不否定项目级角色协作。
-  如果目录下已有 executor/summary.md 且仍在该 Spec 的活跃分支内，应使用 spec-update 而非本 Skill；若原分支已合并/关闭，后续需求默认新建 Spec。
+  如果目录下已有 executor/summary.md，应使用 spec-update 而非本 Skill。
 ---
 
 # Spec Write
@@ -42,7 +42,7 @@ description: >
 
 按以下顺序判断，命中即停止：
 
-1. **同一活跃 Spec 分支内的小变化** → 不新建 Spec 目录，使用 `spec-update` 在原 Spec 目录追加更新产物
+1. **同一活跃 Spec 的小变化** → 不新建 Spec 目录，使用 `spec-update` 在原 Spec 目录追加更新产物
 2. **只做测试/验证/审计证据建设** → `05-验证工程`
 3. **修复、稳定性、性能、安全、重构、技术债** → `04-系统改进`
 4. **架构、数据模型、模块边界、技术选型、迁移方案** → `02-技术设计`
@@ -83,7 +83,7 @@ description: >
 | 4 | 复核文件夹命名 | `YYYYMMDD-HHMM-中文任务描述` |
 | 5 | 确认 writer 目录存在 | `writer/` 应由 spec-start 创建；缺失时创建，不重建整个 Spec 目录 |
 | 6 | 选择模板 | 详见 [references/templates.md](references/templates.md) |
-| 7 | 撰写 `writer/plan.md` | 详见 [references/plan-template.md](references/plan-template.md)，写入 TeamLead 提供的 Git 元数据 |
+| 7 | 撰写 `writer/plan.md` | 详见 [references/plan-template.md](references/plan-template.md) |
 | 8 | 验证路径和命名 | 工作类型目录正确、日期时间当前、任务描述中文 |
 | 9 | 保存文件 | `Write` 工具保存到目标路径 |
 | 10 | 等待用户确认 | **必须**使用当前运行环境的确认方式 |
@@ -105,19 +105,12 @@ description: >
 
 Frontmatter 格式和字段说明详见 [references/plan-template.md](references/plan-template.md)。
 
-**GitHub Flow 字段**：
-- `git_branch`：必须使用 spec-start / git-work 创建的当前分支
-- `base_branch`：通常为 `main`
-- `pr_url`：创建 PR 前留空，由 spec-end 写回
-- 如果项目无 Git 仓库或用户确认无分支模式，`git_branch` 写 `none` 并在风险/依赖中说明
-
 ## 禁止与推荐
 
 **禁止**：
 - ❌ Spec 确认前开始编写代码
 - ❌ 在 `writer/plan.md` 中包含测试计划章节（v2.0 起移除）
 - ❌ 将 execution_mode 设为 agent-teams 或把该字段解释为整个工作流不使用角色协作
-- ❌ 手写一个未创建的 `git_branch`
 - ❌ 直接在 `spec/` 下创建文件夹（必须放入工作类型目录）
 - ❌ 任务描述使用英文
 - ❌ 跳过用户确认步骤
@@ -126,7 +119,6 @@ Frontmatter 格式和字段说明详见 [references/plan-template.md](references
 - ✅ 先读取 `explorer/exploration-report.md` 了解背景
 - ✅ 通过 TeamLead 与 spec-tester 讨论接口边界
 - ✅ 使用 Obsidian Callout 和双链增强文档
-- ✅ 确认 `writer/plan.md` 的 `git_branch` 与当前分支一致
 
 ## 后续流程
 

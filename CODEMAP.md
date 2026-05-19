@@ -45,7 +45,7 @@ skills/
 │       └── runtime-hook-examples.md      # Claude Code / Codex 项目级 Hook 配置样例
 │
 ├── spec-start/                        # 每次启动新 Spec
-│   └── SKILL.md                       # 创建分支、角色目录、Team Context，启动阶段二
+│   └── SKILL.md                       # 创建角色目录、Team Context，启动阶段二
 │
 ├── spec-explore/                      # spec-explorer
 │   └── SKILL.md                       # 经验检索 + 代码探索 → explorer/exploration-report.md
@@ -77,7 +77,7 @@ skills/
 │       └── review-template.md
 │
 ├── spec-end/                          # spec-ender
-│   └── SKILL.md                       # 经验沉淀、规范审查、归档、提交、推送、PR
+│   └── SKILL.md                       # 经验沉淀、规范审查、归档
 │
 ├── spec-update/                       # 同一活跃 Spec 内的小迭代
 │   ├── SKILL.md
@@ -88,7 +88,6 @@ skills/
 ├── exp-search/                        # 显式记忆检索
 ├── exp-reflect/                       # Spec 收尾经验反思与分流
 ├── exp-write/                         # 写入 experience/knowledge
-├── git-work/                          # GitHub Flow 分支、提交、推送、PR
 ├── intent-confirmation/               # 前置意图确认
 ├── obsidian-markdown/                 # Obsidian Markdown 支持
 ├── obsidian-bases/                    # Obsidian Bases 支持
@@ -116,8 +115,7 @@ skills/
 │   │   ├── coding-style.md
 │   │   ├── project-preferences.md
 │   │   ├── spec-workflow.md
-│   │   ├── documentation.md
-│   │   └── git-workflow.md
+│   │   └── documentation.md
 │   ├── skills/
 │   ├── roles/
 │   │   ├── spec-explorer.md
@@ -152,10 +150,10 @@ skills/
 | spec-explorer | `spec-explore` | `explorer/exploration-report.md` | 收集背景和风险，结果交回 TeamLead |
 | spec-writer | `spec-write` | `writer/plan.md` | 只写实现方案，不写测试计划 |
 | spec-tester | `spec-test` | `tester/test-plan.md`, `tester/test-report.md` | 设计和执行测试，不直接修 bug |
-| spec-executor | `spec-execute` | `executor/summary.md` | 严格按 plan 实现，不提交不归档 |
+| spec-executor | `spec-execute` | `executor/summary.md` | 严格按 plan 实现，不归档 |
 | spec-debugger | `spec-debug` | `debugger/debug-*.md`, `debugger/debug-*-fix.md` | 不改已确认 plan，修复后交 TeamLead 重新验证 |
 | spec-reviewer | `spec-review` | `reviewer/review.md`, `reviewer/update-*-review.md` | 审查一致性、完成度、风险和测试缺口 |
-| spec-ender | `spec-end` | `ender/end-report.md` | 收尾、沉淀、规范审查、归档、PR |
+| spec-ender | `spec-end` | `ender/end-report.md` | 收尾、沉淀、规范审查、归档 |
 
 ---
 
@@ -166,7 +164,7 @@ skills/
 ```
 spec-init
   ↓
-spec-start → git-work → lead/team-context.md
+spec-start → lead/team-context.md
   ↓
 阶段一：TeamLead + intent-confirmation
   ↓
@@ -176,10 +174,10 @@ spec-start → git-work → lead/team-context.md
   ↓
 阶段四：spec-test ↔ spec-debug，可选 spec-review
   ↓
-阶段五：spec-end → exp-reflect / exp-write → git-work
+阶段五：spec-end → exp-reflect / exp-write
 ```
 
-`spec-update` 是同一活跃 Spec 分支内的小迭代流程，不创建新 Spec，不归档；它读取 `lead/team-context.md` 的分支信息，把更新产物写入 `updater/`，并可由 `spec-review` 产出 `reviewer/update-xxx-review.md`。
+`spec-update` 是同一活跃 Spec 的小迭代流程，不创建新 Spec，不归档；它把更新产物写入原 Spec 的 `updater/`，并可由 `spec-review` 产出 `reviewer/update-xxx-review.md`。
 
 ### 2. 经验管理
 
@@ -203,7 +201,6 @@ spec-start → git-work → lead/team-context.md
 | Skill | 作用 |
 |-------|------|
 | `intent-confirmation` | 在理解风险较高时对齐用户意图 |
-| `git-work` | 创建 Spec 分支、提交、推送、PR |
 | `skill-creator` | 创建或维护 Skill |
 | `find-skills` | 发现外部 Skill |
 
@@ -247,11 +244,11 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
 
 ## Team Context 数据结构
 
-`lead/team-context.md` 是当前 Spec 的运行账本和 Git/PR 元数据权威来源。
+`lead/team-context.md` 是当前 Spec 的运行账本权威来源。
 
 | 区块 | 维护者 | 用途 |
 |------|--------|------|
-| frontmatter | TeamLead | `runtime`, `git_branch`, `base_branch`, `pr_url`, `phase`, `status` |
+| frontmatter | TeamLead | `runtime`, `phase`, `status` |
 | Current Run Path | TeamLead | 当前任务实际走过的阶段路径 |
 | Task Progress | 各角色共享 | 各角色只追加或更新自己负责的任务行 |
 | Problem Resolution Log | 各角色共享 | 发现/解决问题的角色维护自己相关的问题行 |
@@ -262,7 +259,7 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
 | Open Questions / Blockers | TeamLead | 阻塞和开放问题 |
 | Next Action | TeamLead | 下一步动作 |
 
-Hook 适配器只能记录事实事件，例如 artifact 写入、角色启动/结束、PR URL 更新、时间戳更新。门禁决策、业务结论、handoff 原因和下一步动作必须由 TeamLead 或对应角色明确维护。
+Hook 适配器只能记录事实事件，例如 artifact 写入、角色启动/结束、时间戳更新。门禁决策、业务结论、handoff 原因和下一步动作必须由 TeamLead 或对应角色明确维护。
 
 ---
 
@@ -280,25 +277,8 @@ spec-test      → tester/test-report.md + tester/artifacts/test-logs/<run-id>/
 spec-debug     → debugger/debug-*.md + debugger/debug-*-fix.md
 spec-review    → reviewer/review.md 或 reviewer/update-*-review.md
 spec-update    → updater/update-*.md + updater/update-*-summary.md
-spec-end       → ender/end-report.md + archive / PR
+spec-end       → ender/end-report.md + archive
 exp-write      → spec/context/experience/*.md 或 spec/context/knowledge/*.md
-```
-
-### Git 数据流
-
-```
-新 Spec：
-  spec-start → git-work 创建 <type>/spec-<timestamp>-<slug>
-             → lead/team-context.md 记录 git_branch / base_branch / pr_url
-             → spec-end → git-work commit + push + PR
-             → lead/team-context.md 写回 pr_url
-
-同一 Spec 更新：
-  spec-update → 读取 lead/team-context.md 校验当前分支
-              → updater/update-xxx.md / updater/update-xxx-summary.md
-              → 必要时 reviewer/update-xxx-review.md
-              → git-work commit + push；必要时创建或更新 PR
-              → lead/team-context.md 写回 pr_url
 ```
 
 ### 跨角色通信流
@@ -335,17 +315,16 @@ lead/team-context.md 的事实字段
 | Skill | 直接依赖/常用协作 | 被谁调用 |
 |-------|------------------|----------|
 | `spec-init` | `find-skills`, `project-agent-roles.md`, `team-context-hook-contract.md`, `runtime-hook-examples.md` | 用户一次性调用 |
-| `spec-start` | `intent-confirmation`, `git-work` | 用户启动新 Spec |
+| `spec-start` | `intent-confirmation` | 用户启动新 Spec |
 | `spec-explore` | `exp-search` | TeamLead |
 | `spec-write` | `obsidian-markdown`, `spec-test` 协作 | TeamLead |
 | `spec-test` | `spec-debug` handoff, 测试工具链 | TeamLead |
 | `spec-execute` | `exp-search`, `writer/plan.md` | TeamLead |
 | `spec-debug` | `spec-test` 复验 | TeamLead |
 | `spec-review` | `obsidian-markdown` | TeamLead 或用户可选调用 |
-| `spec-end` | `exp-reflect`, `git-work` | TeamLead |
-| `spec-update` | `git-work`, `spec-review`, `exp-reflect` | 用户在活跃 Spec 分支调用 |
+| `spec-end` | `exp-reflect` | TeamLead |
+| `spec-update` | `spec-review`, `exp-reflect` | 用户在活跃 Spec 上调用 |
 | `exp-reflect` | `exp-write`, `skill-creator` | `spec-end`, `spec-update` |
-| `git-work` | Git CLI / GitHub Flow | `spec-start`, `spec-end`, `spec-update` |
 
 ---
 
@@ -356,7 +335,7 @@ lead/team-context.md 的事实字段
 | Skill 定义 | Markdown `SKILL.md` | YAML frontmatter + 工作流协议 |
 | 文档系统 | Obsidian | wikilink、callout、frontmatter、Bases |
 | 数据格式 | Markdown, YAML, JSON Canvas | 文档和可视化结构 |
-| 版本控制 | Git / GitHub Flow | Spec 分支、提交、推送、PR |
+| 版本控制 | Git | 版本历史管理 |
 | AI 运行时 | Claude Code / Codex / compatible coding agents | 项目级 Agent、Hook、resume 能力按环境适配 |
 | 安装分发 | npm CLI | `rk-flow init` |
 

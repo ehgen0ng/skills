@@ -2,7 +2,7 @@
 name: spec-end
 description: >
   当一个完整 Spec 的计划、实现、测试阶段都已完成，且角色 spec-ender 进入阶段五收尾时使用：
-  收集角色经验、触发 exp-reflect、审查项目规范、询问归档，并完成提交、推送、创建 PR。
+  收集角色经验、触发 exp-reflect、审查项目规范、询问并完成归档。
   不要用于功能实现中途、测试未完成时，或 spec-update 的小迭代收尾。
 ---
 
@@ -14,7 +14,6 @@ description: >
 2. **分流沉淀**：调用 exp-reflect 按权重分流（重大经验 → exp-write，轻量 → Auto Memory）
 3. **规范维护审查**：判断本次 Spec 是否产生需要长期遵守的项目规范，必要时更新 AGENTS.md 或 .agents/rules/
 4. **用户确认归档**：归档前必须使用当前运行环境的确认方式询问用户
-5. **GitHub Flow 收尾**：归档确认后调用 git-work 提交、推送当前 Spec 分支并创建 PR
 
 ## 工作流程
 
@@ -23,8 +22,6 @@ description: >
 从 TeamLead 的启动指令中获取：
 - 当前 Spec 的目录路径
 - 确认所有阶段（计划/实现/测试）已完成
-- 当前工作分支（应与 `lead/team-context.md` 的 `git_branch` 一致）
-- base 分支（通常为 `main`）
 
 ### 步骤 2：扫描 Spec 目录
 
@@ -38,13 +35,6 @@ description: >
 - `reviewer/review.md` / `reviewer/update-xxx-review.md`：审查报告（如有）
 - `updater/update-xxx.md` / `updater/update-xxx-summary.md`：更新方案和总结（如有）
 - `debugger/debug-xxx.md` / `debugger/debug-xxx-fix.md`：问题和修复（如有）
-
-同时读取 `lead/team-context.md` frontmatter：
-- `git_branch`
-- `base_branch`
-- `pr_url`
-
-如果 `git_branch` 为空或为 `none`，说明本 Spec 没有使用 GitHub Flow 分支；收尾时仍可归档文档，但提交/PR 步骤需要先询问用户。
 
 ### 步骤 3：通过 TeamLead 收集团队成员素材
 
@@ -94,37 +84,28 @@ exp-reflect 会根据经验的重要性分流：
 
 如需更新，先向用户说明将修改哪些规范文件，得到确认后再编辑。
 
-### 步骤 6：创建 ender/end-report.md 并询问用户是否归档创建 PR
+### 步骤 6：创建 ender/end-report.md 并询问用户是否归档
 
 在当前 Spec 目录下创建 `ender/end-report.md`，记录：
 - 本次 Spec 完成状态
 - 已扫描的角色产物路径
 - 经验沉淀结果或无需沉淀的说明
 - 规范维护结果或无需维护的说明
-- 归档、提交、推送、PR 的待确认状态
+- 归档的待确认状态
 
 然后向用户确认：
 
 ```text
-确认目标：所有阶段已完成，经验沉淀与规范审查也已完成。是否可以将本 Spec 归档到 06-已归档，并提交、推送当前分支、创建 PR？
+确认目标：所有阶段已完成，经验沉淀与规范审查也已完成。是否可以将本 Spec 归档到 06-已归档？
 确认选项：
-- 确认归档并创建 PR
+- 确认归档
 - 暂不归档
 ```
 
 ### 步骤 7：归档（用户确认后）
 
-用户选择"确认归档并创建 PR"：
-
-1. 将 Spec 目录移动到 `spec/06-已归档/`
-2. 调用 `/git-work` 的“完成 Spec 分支”模式：
-   - 确认当前分支不是 `main`
-   - 确认当前分支等于 `lead/team-context.md` 的 `git_branch`
-   - 审查 diff
-   - commit
-   - push
-   - 创建 PR 或输出 compare URL
-3. 如果获得 PR URL，写回归档后 `lead/team-context.md` 和 `ender/end-report.md` 的 `pr_url` 字段，并补充提交推送
+用户选择"确认归档"：
+- 将 Spec 目录移动到 `spec/06-已归档/`
 
 用户选择"暂不归档"：
 - 跳过归档步骤，直接执行步骤 8
@@ -136,7 +117,7 @@ exp-reflect 会根据经验的重要性分流：
 - `artifact` 指向 `ender/end-report.md`
 - `status` 标记为 `done`
 - `completed_at` 使用当前时间，`updated_by` 写 `spec-ender`
-- 只修改 `Task Progress`，不要修改 TeamLead 控制面区块；PR URL 等控制面字段仍由 TeamLead 或 Hook 更新
+- 只修改 `Task Progress`，不要修改 TeamLead 控制面区块
 
 ```text
 通知 TeamLead：收尾工作完成，本次 Spec 团队实例结束；项目级角色定义保留。
@@ -153,7 +134,7 @@ spec-ender → 汇总 + 调用 exp-reflect → 沉淀经验
 spec-ender → 规范维护审查 → 必要时更新 AGENTS.md / .agents/rules/
 spec-ender → ender/end-report.md
 spec-ender → 用户确认归档
-[如归档] spec-ender → 移动目录 → git-work 提交 + 推送 + 创建 PR
+[如归档] spec-ender → 移动目录
 spec-ender → 通知 TeamLead 完成
 TeamLead → 通知用户整个流程完成，本次 Spec 团队实例结束
 ```
@@ -165,17 +146,14 @@ TeamLead → 通知用户整个流程完成，本次 Spec 团队实例结束
 2. 已调用 exp-reflect 完成分流沉淀
 3. 已完成项目规范维护审查；如需更新，已获得用户确认并完成修改
 4. 已询问用户是否归档
-5. 如归档：已移动目录 + 已调用 git-work 提交、推送、创建 PR
-6. 如有 PR URL：已写回 `lead/team-context.md` 和 `ender/end-report.md`
-7. 已更新 `lead/team-context.md` 的 `Task Progress` 中自己的收尾任务行
-8. 已通知 TeamLead
+5. 如归档：已移动目录
+6. 已更新 `lead/team-context.md` 的 `Task Progress` 中自己的收尾任务行
+7. 已通知 TeamLead
 
 ### 常见陷阱
 - 跳过多角色讨论，只用自己的视角沉淀经验（会遗漏各角色的独特发现）
 - 把详细规范或一次性实现细节写进 AGENTS.md，导致入口文件膨胀
 - 把一次性实现细节写进 rules，导致长期规范失真
 - 本次形成了长期安全/日志/测试约束，却忘记更新 .agents/rules/
-- 在 `main` 上直接提交 Spec 成果
-- 创建 PR 前没有确认当前分支与 `lead/team-context.md` 的 `git_branch` 一致
 - 未询问用户直接归档
 - 沉淀完成后忘记通知 TeamLead

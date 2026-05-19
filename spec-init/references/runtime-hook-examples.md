@@ -27,7 +27,6 @@
 | `task_completed` | `TaskCompleted` | 无稳定原生事件 | Claude Code 任务完成事件不支持 matcher，脚本需自行过滤 |
 | `issue_artifact_written` | 同上 | 同上 | 仅当路径匹配 `debugger/debug-*.md` 或 fix 文档 |
 | `turn_finished` | `Stop` | `Stop` | 只做轻量一致性校准和 `updated_at` |
-| `pr_updated` | `PostToolUse` 或 `Stop` 扫描 | `PostToolUse` 或 `Stop` 扫描 | 只在发现 PR URL 变化时更新 |
 
 ## Claude Code 项目级 Hook 样例
 

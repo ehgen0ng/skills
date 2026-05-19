@@ -11,9 +11,6 @@ status: 未确认
 priority: 高
 created: YYYY-MM-DD
 execution_mode: single-agent
-git_branch: feat/spec-YYYYMMDD-HHMM-ascii-slug
-base_branch: main
-pr_url:
 tags:
   - spec
   - plan
@@ -32,17 +29,11 @@ related: []
 | `priority` | 是 | 优先级 | `高`/`中`/`低` |
 | `created` | 是 | 创建日期 | `YYYY-MM-DD` 格式 |
 | `execution_mode` | 是 | 执行模式，v2.0 固定 `single-agent` | `single-agent` |
-| `git_branch` | 是 | 当前 Spec 对应的 GitHub Flow 工作分支，由 spec-start 创建 | ASCII 分支名，如 `feat/spec-20260428-1430-user-auth` |
-| `base_branch` | 是 | 工作分支的基准分支 | 通常为 `main` |
-| `pr_url` | 否 | spec-end 创建 PR 后写回 | GitHub PR URL，创建前留空 |
 | `tags` | 是 | 标签列表 | 至少包含 `spec` 和 `plan` |
 | `related` | 否 | 关联的其他 Spec | 双链列表 |
 
 > [!important] v2.0 变更：execution_mode 固定为 single-agent
 > 该字段只描述实现阶段由 spec-executor 执行代码修改的模式，不表示整个 Spec 工作流没有项目级角色协作。项目级角色由 spec-init 初始化，spec-start 负责加载和唤起。
-
-> [!important] GitHub Flow 元数据
-> `git_branch` / `base_branch` 由 spec-start 通过 git-work 创建并传入。不要手写一个不存在的分支；如果项目不是 Git 仓库，写 `git_branch: none` 并在正文说明原因。
 
 ---
 

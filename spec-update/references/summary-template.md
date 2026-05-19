@@ -7,9 +7,6 @@ status: 已完成
 created: YYYY-MM-DD
 plan: "[[../writer/plan|plan]]"
 update: "[[update-XXX]]"
-git_branch: 与 update-XXX.md 相同
-base_branch: 与 update-XXX.md 相同
-pr_url: 与 update-XXX.md 相同
 tags:
   - spec
   - update
@@ -142,7 +139,4 @@ tests/
 | `created` | 是 | `YYYY-MM-DD` |
 | `plan` | 是 | `"[[../writer/plan|plan]]"` |
 | `update` | 是 | `"[[update-XXX]]"` |
-| `git_branch` | 是 | 当前 Spec 工作分支，与 update-XXX.md 相同 |
-| `base_branch` | 是 | 工作分支的基准分支，与 update-XXX.md 相同 |
-| `pr_url` | 否 | 当前 Spec 的 PR 链接，与 update-XXX.md 相同 |
 | `tags` | 是 | 至少包含 `spec`、`update`、`summary` |
