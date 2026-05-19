@@ -17,7 +17,7 @@ description: >
 ## 核心原则
 
 1. **Spec 优先**：只实现 `writer/plan.md` 中明确定义的功能，不添加、不偏离、不"优化"
-2. **用户确认必须执行**：完成 `executor/summary.md` 后必须使用当前运行环境的确认方式向用户确认
+2. **用户确认必须执行**：完成 `executor/summary.md` 后必须先调用 `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具向用户确认；调用超时或失败时回退到原生确认方式（如 `AskUserQuestion`）
 3. **交接清晰**：实现完成后只交接给 TeamLead，不执行测试、不归档
 
 > [!important] v2.0 变更
@@ -79,7 +79,7 @@ description: >
 通知 TeamLead：executor/summary.md 已完成，请发起用户确认，并在确认后启动 spec-tester 执行测试。
 ```
 
-TeamLead 使用当前运行环境的确认方式向用户确认。如用户需要修改则根据反馈调整后重新确认。
+TeamLead 先调用 `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具向用户确认；若调用超时或失败，则回退到原生确认方式（如 `AskUserQuestion`）重新确认。如用户需要修改则根据反馈调整后重新确认。
 
 ### 步骤 9：交接测试阶段
 

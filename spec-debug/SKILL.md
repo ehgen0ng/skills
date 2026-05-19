@@ -102,7 +102,7 @@ tags:
 通知 TeamLead：debugger/debug-001.md 已创建，请向用户确认诊断结果。路径：{路径}
 ```
 
-TeamLead 使用当前运行环境的确认方式向用户确认。等待确认通过后继续修复。
+TeamLead 先调用 `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具向用户确认；若调用超时或失败，则回退到原生确认方式（如 `AskUserQuestion`）重新确认。等待确认通过后继续修复。
 
 ### 步骤 7：执行修复
 

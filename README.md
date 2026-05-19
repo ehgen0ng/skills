@@ -490,10 +490,12 @@ views:
 
 ### 概述
 
-本项目使用当前运行环境可用的确认方式实现用户确认工作流。每个阶段转换前都设有**门禁节点**，由 TeamLead 统一发起，确保用户始终掌控开发方向。
+本项目优先使用 `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具实现用户确认工作流，MCP 不可用时回退到运行环境的原生确认方式。每个阶段转换前都设有**门禁节点**，由 TeamLead 统一发起，确保用户始终掌控开发方向。
 
-> [!note] 平台映射
-> 如果环境支持原生确认工具（如 `AskUserQuestion`），优先使用工具；如果不支持，TeamLead 直接向用户提问并等待明确回复。
+> [!note] 确认方式：MCP 优先，原生回退
+> 涉及 Spec 文档的门禁（Spec 审阅、实现确认、测试确认、诊断确认、归档确认）**先调用** `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具等待用户确认（传入确认文档路径、文档类型、标题）。
+> 若该 MCP 工具调用**超时或失败**（MCP Server 不可用、返回错误），则**回退**到运行环境的原生确认方式（如 `AskUserQuestion`，或 TeamLead 直接向用户提问），重新向用户确认一次。
+> 门禁 1（需求对齐）不涉及文档，由 `intent-confirmation` 按其自身流程确认。
 
 ### 门禁节点
 

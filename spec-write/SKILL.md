@@ -16,7 +16,7 @@ description: >
 
 ### 用户确认（必须执行）
 
-> [!important] 完成 `writer/plan.md` 撰写后，**必须**使用当前运行环境的确认方式等待用户确认。
+> [!important] 完成 `writer/plan.md` 撰写后，**必须先调用** `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具等待用户确认；若该工具调用超时或失败，则回退到运行环境的原生确认方式（如 `AskUserQuestion`）重新确认。
 
 ```text
 确认目标：writer/plan.md 已创建完成，请确认设计方案是否可以开始实现？
@@ -86,7 +86,7 @@ description: >
 | 7 | 撰写 `writer/plan.md` | 详见 [references/plan-template.md](references/plan-template.md) |
 | 8 | 验证路径和命名 | 工作类型目录正确、日期时间当前、任务描述中文 |
 | 9 | 保存文件 | `Write` 工具保存到目标路径 |
-| 10 | 等待用户确认 | **必须**使用当前运行环境的确认方式 |
+| 10 | 等待用户确认 | **必须先调用** `mcp__obsidian-spec-confirm__spec_confirm`，超时或失败回退原生确认方式 |
 
 ### 步骤 7：writer/plan.md 内容要求（v2.0）
 

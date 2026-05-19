@@ -13,7 +13,7 @@ description: >
 1. **多角色视角**：通过 TeamLead 收集各角色视角的经验素材，不只是 spec-ender 的独角戏
 2. **分流沉淀**：调用 exp-reflect 按权重分流（重大经验 → exp-write，轻量 → Auto Memory）
 3. **规范维护审查**：判断本次 Spec 是否产生需要长期遵守的项目规范，必要时更新 AGENTS.md 或 .agents/rules/
-4. **用户确认归档**：归档前必须使用当前运行环境的确认方式询问用户
+4. **用户确认归档**：归档前必须先调用 `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具询问用户；调用超时或失败时回退到原生确认方式（如 `AskUserQuestion`）
 
 ## 工作流程
 

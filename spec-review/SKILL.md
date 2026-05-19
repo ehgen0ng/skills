@@ -9,7 +9,7 @@ description: 审查 Spec 执行完成情况，检验实现是否严格按照 Spe
 
 ### 用户确认（必须执行）
 
-> [!important] 完成审查报告后，**必须**使用当前运行环境的确认方式等待用户确认。
+> [!important] 完成审查报告后，**必须先调用** `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具等待用户确认；若该工具调用超时或失败，则回退到运行环境的原生确认方式（如 `AskUserQuestion`）重新确认。
 
 ```text
 确认目标：审查报告已创建完成，审查结果是否准确？
@@ -49,7 +49,7 @@ description: 审查 Spec 执行完成情况，检验实现是否严格按照 Spe
 | 4 | 检查代码实现 | 根据 summary 文件列表读取实际代码，逐项核对 |
 | 5 | 对比分析 | 按三个维度（完成度、一致性、额外实现）识别差异 |
 | 6 | 生成审查报告 | 在 Spec 目录下创建 `reviewer/review.md`，模板见 [references/review-template.md](references/review-template.md) |
-| 7 | 用户确认 | **必须**使用当前运行环境的确认方式等待用户确认 |
+| 7 | 用户确认 | **必须先调用** `mcp__obsidian-spec-confirm__spec_confirm`，超时或失败回退原生确认方式 |
 
 ### 步骤 5：对比分析要点
 
