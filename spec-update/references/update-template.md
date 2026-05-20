@@ -113,7 +113,7 @@ tags:
 | `type` | 是 | 文档类型 | `update` |
 | `update_number` | 是 | 更新编号 | 与文件名一致（如 1） |
 | `category` | 是 | 分类目录 | 继承自原 writer/plan.md |
-| `status` | 是 | 当前状态 | `未确认`/`已确认`/`已归档` |
+| `status` | 是 | 当前生命周期状态；写入职责见 `.agents/rules/documentation.md` | `未确认`/`已确认`/`已归档` |
 | `update_type` | 是 | 更新类型 | `功能增强`/`Bug修复`/`性能优化`/`重构`/`安全修复` |
 | `created` | 是 | 创建日期 | `YYYY-MM-DD` |
 | `plan` | 是 | 关联 plan | `"[[../writer/plan|plan]]"` |

@@ -23,6 +23,11 @@ description: 审查 Spec 执行完成情况，检验实现是否严格按照 Spe
 - `title`：必须包含项目名，格式建议为 `[项目名] 审查报告 - 任务标题`；项目名优先取当前工作区根目录名，若 TeamLead 已提供 `project_name` 则使用该值。
 - `doc_type`：审查报告固定传 `review`。
 
+状态写入职责：
+- `spec_confirm` 成功返回确认时，工具已自动把文档 frontmatter 的 `status` 更新为 `已确认`，Agent 不得再手工查找/替换 `status: 未确认`。
+- 只有 `spec_confirm` 超时或失败并回退到原生确认，且用户确认通过时，Agent 才手工将 `status` 更新为 `已确认`。
+- 用户选择需要调整时，按反馈修改审查报告并保持或改回 `status: 未确认`，然后重新确认。
+
 ### 审查文件命名
 
 | 场景 | 文件名 |

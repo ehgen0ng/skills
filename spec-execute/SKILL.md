@@ -30,6 +30,11 @@ description: >
 - `title`：必须包含项目名，格式建议为 `[项目名] 实现总结 - 任务标题`；项目名优先取当前工作区根目录名，若 TeamLead 已提供 `project_name` 则使用该值。
 - `doc_type`：`executor/summary.md` 固定传 `summary`。
 
+状态写入职责：
+- `spec_confirm` 成功返回确认时，工具已自动把文档 frontmatter 的 `status` 更新为 `已确认`，Agent 不得再手工查找/替换 `status: 未确认`。
+- 只有 `spec_confirm` 超时或失败并回退到原生确认，且用户确认通过时，Agent 才手工将 `status` 更新为 `已确认`。
+- 用户选择需要修改时，按反馈修改文档并保持或改回 `status: 未确认`，然后重新确认。
+
 ## 工作流程
 
 ### 步骤 1：读取并理解 writer/plan.md

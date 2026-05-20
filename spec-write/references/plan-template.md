@@ -25,7 +25,7 @@ related: []
 | `title` | 是 | Spec 标题 | - |
 | `type` | 是 | 文档类型 | `plan` |
 | `category` | 是 | 工作类型目录，必须按 spec-write 的分类决策顺序选择，不能默认写 03 | `01-产品规划`/`02-技术设计`/`03-能力交付`/`04-系统改进`/`05-验证工程` |
-| `status` | 是 | 当前状态 | `未确认`/`已确认`/`已归档` |
+| `status` | 是 | 当前生命周期状态；写入职责见 `.agents/rules/documentation.md` | `未确认`/`已确认`/`已归档` |
 | `priority` | 是 | 优先级 | `高`/`中`/`低` |
 | `created` | 是 | 创建日期 | `YYYY-MM-DD` 格式 |
 | `execution_mode` | 是 | 执行模式，v2.0 固定 `single-agent` | `single-agent` |

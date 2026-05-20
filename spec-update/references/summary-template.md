@@ -135,7 +135,7 @@ tests/
 | `type` | 是 | `update-summary` |
 | `update_number` | 是 | 与 update 文件一致 |
 | `category` | 是 | 继承自原 writer/plan.md |
-| `status` | 是 | `未确认`/`已确认`/`已归档` |
+| `status` | 是 | 当前生命周期状态；写入职责见 `.agents/rules/documentation.md` |
 | `created` | 是 | `YYYY-MM-DD` |
 | `plan` | 是 | `"[[../writer/plan|plan]]"` |
 | `update` | 是 | `"[[update-XXX]]"` |

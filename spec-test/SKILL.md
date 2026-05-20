@@ -18,6 +18,7 @@ description: >
 6. **证据必须自动采集**：`tester/artifacts/test-logs/<run-id>/` 下的日志、JSON、trace、录屏和截图必须由测试脚本、浏览器自动化、服务日志采集或命令输出生成；Agent 不得手写、补写或伪造这些证据文件内容
 7. **策略按场景加载**：不同开发场景的测试策略沉淀在 `references/`，命中场景时先读取对应策略
 8. **策略在 spec-test 内沉淀**：测试过程中发现跨项目可复用的测试方法时，更新本 Skill 的 `references/` 和策略表；不要写入当前项目的 `AGENTS.md` 或 `.agents/rules/`
+9. **状态写入职责**：测试产物创建时写 `status: 未确认`；TeamLead 确认时按项目级 status 写入职责处理，spec-tester 不手工把测试产物改成 `已确认`
 
 ## 测试策略库
 

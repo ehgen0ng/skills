@@ -107,10 +107,18 @@ exp-reflect 会根据经验的重要性分流：
 - `title`：必须包含项目名，格式建议为 `[项目名] 归档确认 - 任务标题`；项目名优先取当前工作区根目录名，若 TeamLead 已提供 `project_name` 则使用该值。
 - `doc_type`：`ender/end-report.md` 传 `summary`。
 
+状态写入职责：
+- `spec_confirm` 成功返回确认时，工具已自动把 `ender/end-report.md` frontmatter 的 `status` 更新为 `已确认`，Agent 不得再手工查找/替换 `status: 未确认`。
+- 只有 `spec_confirm` 超时或失败并回退到原生确认，且用户确认归档时，Agent 才手工将 `status` 更新为 `已确认`。
+- 用户选择暂不归档时，不把文档状态改成 `已确认`。
+- `status: 已归档` 不是 `spec_confirm` 的确认状态；只有执行步骤 7 且目录移动成功后，才由 Agent 更新本 Spec 内已确认文档的 frontmatter 状态。
+
 ### 步骤 7：归档（用户确认后）
 
 用户选择"确认归档"：
 - 将 Spec 目录移动到 `spec/06-已归档/`
+- 移动成功后，将本 Spec 目录内所有已确认的生命周期产物 frontmatter `status` 更新为 `已归档`
+- 如果发现仍为 `未确认` 的生命周期产物，停止归档状态更新，回到对应确认节点补齐确认
 
 用户选择"暂不归档"：
 - 跳过归档步骤，直接执行步骤 8

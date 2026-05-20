@@ -446,6 +446,19 @@ related: []
 
 运行状态统一记录在 `lead/team-context.md`，角色产物只链接 Team Context，不复制运行状态正文。
 
+#### status 写入职责
+
+Spec 文档 frontmatter 的 `status` 只表示文档生命周期，不等同于 `lead/team-context.md` 中的任务进度状态。
+
+| 状态 | 写入时机 | 写入方 |
+|------|----------|--------|
+| `未确认` | 创建待确认文档，或用户要求修改后需要重新确认 | Agent |
+| `已确认` | `spec_confirm` 成功返回确认 | `obsidian-spec-confirm` 自动写入，Agent 不再手工替换 |
+| `已确认` | `spec_confirm` 超时/失败后回退原生确认，且用户确认通过 | Agent 手工写入 |
+| `已归档` | 用户确认归档，且 spec-end 已成功移动目录到 `spec/06-已归档/` | Agent 手工写入 |
+
+不要对 Markdown 做全局文本替换来更新生命周期状态；只更新目标文档 frontmatter 中的 `status` 字段。
+
 **优势**：
 - 支持结构化查询和过滤
 - 与 obsidian-bases 无缝集成
@@ -495,6 +508,7 @@ views:
 > [!note] 确认方式：MCP 优先，原生回退
 > 涉及 Spec 文档的门禁（Spec 审阅、实现确认、测试确认、诊断确认、归档确认）**先调用** `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具等待用户确认（传入确认文档路径、文档类型、标题）。
 > 若该 MCP 工具调用**超时或失败**（MCP Server 不可用、返回错误），则**回退**到运行环境的原生确认方式（如 `AskUserQuestion`，或 TeamLead 直接向用户提问），重新向用户确认一次。
+> MCP 工具成功返回确认时，`obsidian-spec-confirm` 已负责将文档 frontmatter 的 `status` 更新为 `已确认`；Agent **不得**再手工查找/替换 `status: 未确认`。只有 MCP 超时或失败并回退到原生确认，且用户确认通过时，才由 Agent 手工更新文档状态。
 > 门禁 1（需求对齐）不涉及文档，由 `intent-confirmation` 按其自身流程确认。
 
 ### 门禁节点
@@ -1275,5 +1289,3 @@ skills/            → 工作流程定义（按需加载）
 - 初始版本
 - Spec 驱动式开发工作流
 - 三层记忆架构（memory Skill）
-
-
