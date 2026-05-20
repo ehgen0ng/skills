@@ -18,6 +18,11 @@ description: 审查 Spec 执行完成情况，检验实现是否严格按照 Spe
 - 需要调整（请说明问题）
 ```
 
+调用 `mcp__obsidian-spec-confirm__spec_confirm` 时参数规则：
+- `file_path`：优先传待确认文档的系统绝对路径，如 `/Users/.../project/spec/.../reviewer/review.md`；仅在无法取得系统绝对路径时传 vault 内路径。
+- `title`：必须包含项目名，格式建议为 `[项目名] 审查报告 - 任务标题`；项目名优先取当前工作区根目录名，若 TeamLead 已提供 `project_name` 则使用该值。
+- `doc_type`：审查报告固定传 `review`。
+
 ### 审查文件命名
 
 | 场景 | 文件名 |

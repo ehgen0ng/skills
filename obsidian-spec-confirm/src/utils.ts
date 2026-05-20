@@ -5,7 +5,9 @@
  * 章节: 实现步骤 - 步骤 6: 文档状态管理
  */
 
-import { App, TFile, Vault, FileManager } from 'obsidian';
+import { App, TFile, FileManager } from 'obsidian';
+import * as fs from 'fs';
+import * as nodePath from 'path';
 import { DocType, DocStatus } from './status-manager.js';
 
 /**
@@ -73,24 +75,44 @@ export function detectDocType(filePath: string): DocType | null {
 /**
  * 查找文档
  *
+ * 支持两类路径：
+ * - vault 内路径，如 "spec/skills/03-功能实现/xxx/plan.md"
+ * - 系统绝对路径，如 "/Users/me/project/spec/03-功能实现/xxx/plan.md"
+ *
+ * 绝对路径用于中心审阅 vault 场景：vault 内通过 symlink 挂载多个项目的
+ * spec/ 目录，MCP 调用方仍然传项目里的真实文件路径。
+ *
  * @param app Obsidian App 实例
- * @param path 文档路径（相对于 vault 根目录）
+ * @param path 文档路径
  * @returns TFile | null 文档文件，如果不存在则返回 null
  */
 export function findSpecFile(app: App, path: string): TFile | null {
-    // 尝试多种路径格式
-    const pathsToTry = [
-        path,                                    // 原始路径
-        path.replace(/\//g, '\\'),              // 正斜杠转反斜杠
-        path.replace(/\\/g, '/'),               // 反斜杠转正斜杠
-    ];
+    const normalizedInput = normalizeVaultPath(path);
+    const directMatch = findSpecFileByVaultPath(app, normalizedInput);
+    if (directMatch) {
+        return directMatch;
+    }
+
+    if (isSystemAbsolutePath(path)) {
+        return findSpecFileBySystemPath(app, path);
+    }
+
+    return null;
+}
+
+/**
+ * 按 vault 内路径查找文档。
+ */
+function findSpecFileByVaultPath(app: App, path: string): TFile | null {
+    const pathsToTry = new Set<string>([
+        path,
+        normalizeVaultPath(path),
+    ]);
 
     // 如果路径以 spec/ 开头，尝试去除它（vault 根目录可能已经是 spec/）
     if (path.startsWith('spec/') || path.startsWith('spec\\')) {
-        pathsToTry.push(
-            path.substring(5),                   // 去除 spec/ 前缀
-            path.substring(5).replace(/\//g, '\\'),  // 去除前缀后转反斜杠
-        );
+        pathsToTry.add(path.substring(5));
+        pathsToTry.add(normalizeVaultPath(path.substring(5)));
     }
 
     // 首先尝试 getAbstractFileByPath（更快）
@@ -118,13 +140,147 @@ export function findSpecFile(app: App, path: string): TFile | null {
 }
 
 /**
+ * 按系统绝对路径查找文档。
+ */
+function findSpecFileBySystemPath(app: App, filePath: string): TFile | null {
+    const vaultRelativePath = toVaultRelativePath(app, filePath);
+    if (vaultRelativePath) {
+        const file = findSpecFileByVaultPath(app, vaultRelativePath);
+        if (file) {
+            return file;
+        }
+    }
+
+    const targetRealPath = realPath(filePath);
+    if (!targetRealPath) {
+        return null;
+    }
+
+    const specTail = getSpecTail(filePath);
+    const markdownFiles = app.vault.getMarkdownFiles();
+    const candidates = specTail
+        ? markdownFiles.filter((file) => normalizeVaultPath(file.path).endsWith(specTail))
+        : markdownFiles.filter((file) => file.name === nodePath.basename(filePath));
+
+    for (const file of candidates) {
+        const fullPath = getFullVaultFilePath(app, file.path);
+        if (!fullPath) {
+            continue;
+        }
+
+        const fileRealPath = realPath(fullPath);
+        if (fileRealPath && sameSystemPath(fileRealPath, targetRealPath)) {
+            return file;
+        }
+    }
+
+    return null;
+}
+
+/**
+ * 将系统绝对路径转换成 vault 内路径。
+ */
+function toVaultRelativePath(app: App, filePath: string): string | null {
+    const basePath = getVaultBasePath(app);
+    if (!basePath) {
+        return null;
+    }
+
+    const relativePath = nodePath.relative(nodePath.resolve(basePath), nodePath.resolve(filePath));
+    if (relativePath.startsWith('..') || nodePath.isAbsolute(relativePath)) {
+        return null;
+    }
+
+    return normalizeVaultPath(relativePath);
+}
+
+/**
+ * 获取 vault 在系统文件系统中的根路径。
+ */
+function getVaultBasePath(app: App): string | null {
+    const adapter = app.vault.adapter as unknown as { getBasePath?: () => string };
+    if (typeof adapter.getBasePath !== 'function') {
+        return null;
+    }
+
+    return adapter.getBasePath();
+}
+
+/**
+ * 获取 vault 内文件的系统路径。
+ */
+function getFullVaultFilePath(app: App, vaultPath: string): string | null {
+    const adapter = app.vault.adapter as unknown as { getFullPath?: (path: string) => string };
+    if (typeof adapter.getFullPath === 'function') {
+        return adapter.getFullPath(vaultPath);
+    }
+
+    const basePath = getVaultBasePath(app);
+    if (!basePath) {
+        return null;
+    }
+
+    return nodePath.join(basePath, vaultPath);
+}
+
+/**
+ * 从项目绝对路径里提取 spec/ 后面的尾部路径。
+ */
+function getSpecTail(filePath: string): string | null {
+    const normalizedPath = normalizeVaultPath(filePath);
+    const marker = '/spec/';
+    const markerIndex = normalizedPath.lastIndexOf(marker);
+
+    if (markerIndex >= 0) {
+        return normalizedPath.substring(markerIndex + marker.length);
+    }
+
+    if (normalizedPath.startsWith('spec/')) {
+        return normalizedPath.substring(5);
+    }
+
+    return null;
+}
+
+function normalizeVaultPath(path: string): string {
+    return path.trim().replace(/\\/g, '/').replace(/\/+/g, '/');
+}
+
+function isSystemAbsolutePath(path: string): boolean {
+    return nodePath.isAbsolute(path) || /^[a-zA-Z]:[\\/]/.test(path);
+}
+
+function realPath(path: string): string | null {
+    try {
+        return fs.realpathSync.native(path);
+    } catch {
+        try {
+            return fs.realpathSync(path);
+        } catch {
+            return null;
+        }
+    }
+}
+
+function sameSystemPath(a: string, b: string): boolean {
+    if (process.platform === 'win32') {
+        return a.toLowerCase() === b.toLowerCase();
+    }
+
+    return a === b;
+}
+
+/**
  * 检查文档是否在 spec/ 目录下
  *
  * @param filePath 文档路径
  * @returns boolean 是否在 spec/ 目录下
  */
 export function isSpecFile(filePath: string): boolean {
-    return filePath.startsWith('spec/') || filePath.startsWith('\\spec\\');
+    const normalizedPath = normalizeVaultPath(filePath);
+    return normalizedPath.startsWith('spec/') ||
+        normalizedPath.includes('/spec/') ||
+        detectDocType(filePath) !== null;
 }
 
 /**

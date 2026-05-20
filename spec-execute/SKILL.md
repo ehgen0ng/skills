@@ -25,6 +25,11 @@ description: >
 > 测试由 spec-tester 负责，bug 修复由 spec-debugger 负责。
 > spec-execute 只负责：实现代码 → 产出 `executor/summary.md` → 通知 TeamLead。
 
+调用 `mcp__obsidian-spec-confirm__spec_confirm` 时参数规则：
+- `file_path`：优先传待确认文档的系统绝对路径，如 `/Users/.../project/spec/.../executor/summary.md`；仅在无法取得系统绝对路径时传 vault 内路径。
+- `title`：必须包含项目名，格式建议为 `[项目名] 实现总结 - 任务标题`；项目名优先取当前工作区根目录名，若 TeamLead 已提供 `project_name` 则使用该值。
+- `doc_type`：`executor/summary.md` 固定传 `summary`。
+
 ## 工作流程
 
 ### 步骤 1：读取并理解 writer/plan.md

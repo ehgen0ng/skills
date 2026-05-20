@@ -25,6 +25,11 @@ description: >
 - 需要修改（请说明修改要求）
 ```
 
+调用 `mcp__obsidian-spec-confirm__spec_confirm` 时参数规则：
+- `file_path`：优先传待确认文档的系统绝对路径，如 `/Users/.../project/spec/.../writer/plan.md`；仅在无法取得系统绝对路径时传 vault 内路径。
+- `title`：必须包含项目名，格式建议为 `[项目名] 设计方案 - 任务标题`；项目名优先取当前工作区根目录名，若 TeamLead 已提供 `project_name` 则使用该值。
+- `doc_type`：`writer/plan.md` 固定传 `plan`。
+
 ### 工作类型目录与命名规范
 
 分类按**任务主意图**判断，不按“是否会改代码”判断。不要把 03 当默认目录。

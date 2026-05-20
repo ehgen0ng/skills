@@ -104,6 +104,11 @@ tags:
 
 TeamLead 先调用 `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具向用户确认；若调用超时或失败，则回退到原生确认方式（如 `AskUserQuestion`）重新确认。等待确认通过后继续修复。
 
+调用 `mcp__obsidian-spec-confirm__spec_confirm` 时参数规则：
+- `file_path`：优先传待确认文档的系统绝对路径，如 `/Users/.../project/spec/.../debugger/debug-001.md`；仅在无法取得系统绝对路径时传 vault 内路径。
+- `title`：必须包含项目名，格式建议为 `[项目名] 问题诊断 - 问题简述`；项目名优先取当前工作区根目录名，若 TeamLead 已提供 `project_name` 则使用该值。
+- `doc_type`：诊断文档当前传 `summary`，因为确认工具枚举仅包含 `plan` / `update` / `summary` / `review`。
+
 ### 步骤 7：执行修复
 
 按照确认的修复方案修改代码：

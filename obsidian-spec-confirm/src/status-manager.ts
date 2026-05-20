@@ -18,7 +18,7 @@ export type ConfirmAction = 'continue' | 'modify' | 'retry';
  * 文档信息接口
  */
 export interface DocInfo {
-    filePath: string;        // 文档路径，如 "spec/03-功能实现/xxx/plan.md"
+    filePath: string;        // 文档路径，支持 vault 内路径或系统绝对路径
     docType: DocType;        // 文档类型
     title: string;           // 文档标题
     status: DocStatus;       // 当前状态
@@ -28,7 +28,7 @@ export interface DocInfo {
  * 确认请求
  */
 export interface ConfirmRequest {
-    filePath: string;        // 文档路径
+    filePath: string;        // 文档路径，支持 vault 内路径或系统绝对路径
     docType: DocType;        // 文档类型
     title: string;           // 文档标题
     timestamp: number;       // 请求时间戳

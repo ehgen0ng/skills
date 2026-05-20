@@ -109,7 +109,7 @@ export function getMCPTools(): Array<{
                 properties: {
                     file_path: {
                         type: 'string',
-                        description: 'Spec 文档的相对路径，如 spec/03-功能实现/xxx/plan.md',
+                        description: 'Spec 文档路径。支持 vault 内路径（如 spec/skills/xxx/plan.md）或系统绝对路径（如 /Users/me/project/spec/xxx/plan.md）。',
                     },
                     doc_type: {
                         type: 'string',
