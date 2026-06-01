@@ -119,7 +119,8 @@ TeamLead 先调用 `mcp__obsidian-spec-confirm__spec_confirm` MCP 工具向用�
 按照确认的修复方案修改代码：
 - 最小化修改范围
 - 不借机添加新功能
-- 在代码注释中引用 debug 文档：`# 修复: debugger/debug-001.md`
+- 新增/修改函数应补充简体中文职责注释；复杂修复逻辑说明边界、失败处理和兼容性原因
+- 在关键修复注释中引用 debug 文档：`# 修复: debugger/debug-001.md`
 
 ### 步骤 8：创建 debug-xxx-fix.md 修复总结
 

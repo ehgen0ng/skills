@@ -57,7 +57,7 @@ description: 当同一个活跃 Spec 需要小迭代、补充需求、修正方�
 4. **等待用户确认**：先调用 `mcp__obsidian-spec-confirm__spec_confirm`，超时或失败回退原生确认方式（节点 1）
 5. **检索历史经验**：调用 `/exp-search <关键词>`
 6. **创建任务清单**：根据 `updater/update-xxx.md` 的"实现步骤"章节创建
-7. **按方案实现更新**：严格遵循方案，不修改方案之外的代码
+7. **按方案实现更新**：严格遵循方案，不修改方案之外的代码；新增/修改函数按中文函数头注释规范说明职责，复杂逻辑说明原因和边界
 8. **编写/更新测试**：新增测试 + 修改测试 + 回归测试
 9. **运行测试验证**：全部通过才能继续
 10. **创建 updater/update-xxx-summary.md**：参照 [references/summary-template.md](references/summary-template.md)，应用 Obsidian 格式：`[[../writer/plan|设计方案]]` 双链、`> [!success]` / `> [!warning]` Callout、`#spec/更新` 标签
