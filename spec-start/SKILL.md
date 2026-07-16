@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: spec-start
 description: >
   当用户开始新的开发任务、需要启动完整 Spec 流程（需求对齐→探索→设计→实现→测试→收尾），
@@ -100,6 +101,7 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
 ```
 
 优先使用当前运行环境的项目级 Agent / Subagent 能力：
+- OMP（Oh My Pi）：优先使用 `.omp/agents/<role-id>.md`，TeamLead 通过 `task` 工具 spawn 角色，角色间协作用 `irc` 子 Agent 通信；OMP 只发现 `.omp/agents/`，不读 `.claude/.codex`
 - Claude Code：优先使用 `.claude/agents/<role-id>.md`
 - Codex：优先使用 `.codex/agents/<role-id>.toml`，spawn 时使用 TOML `name` 字段（如 `spec_explorer`）
 - 其他环境：使用 `.agents/roles/<role-id>.md` 的中立角色协议
@@ -119,7 +121,7 @@ spec_dir: spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>
 task_description: {任务描述}
 status: running
 phase: intent | exploration | spec-writing | implementation | testing | debugging | review | ending | archived
-runtime: claude-code | codex | generic
+runtime: omp | claude-code | codex | generic
 created_at: {ISO8601}
 updated_at: {ISO8601}
 ---
@@ -152,7 +154,7 @@ updated_at: {ISO8601}
 
 | role_id | adapter | runtime_agent_name | agent_id | thread_id | session_id | status | resumable | last_artifact | updated_at |
 |---------|---------|--------------------|----------|-----------|------------|--------|-----------|---------------|------------|
-| spec-explorer | .claude/.codex/.agents | spec-explorer/spec_explorer | 运行时填写 | 运行时填写 | 运行时填写 | pending | unknown |  | {ISO8601} |
+| spec-explorer | .omp/.claude/.codex/.agents | spec-explorer/spec_explorer | 运行时填写 | 运行时填写 | 运行时填写 | pending | unknown |  | {ISO8601} |
 
 ## Artifact Registry
 
@@ -171,6 +173,21 @@ updated_at: {ISO8601}
 | from | to | reason | artifact | status | updated_at |
 |------|----|--------|----------|--------|------------|
 
+## Loop Budget
+
+> 修复循环（spec-tester ↔ spec-debugger）的运行预算。值不写死在 Skill 中，
+> 由 TeamLead 在进入阶段四修复循环前用 intent-confirmation 与用户确认后填入。
+> 只跟踪两个上限：最大轮数、最大无进展轮数。
+
+| loop | max_rounds | max_no_progress_rounds | rounds_used | no_progress_streak | status | confirmed_by_user | updated_at |
+|------|-----------|------------------------|-------------|--------------------|--------|-------------------|------------|
+| test-debug | 待确认 | 待确认 | 0 | 0 | not-started | no | |
+
+- `max_rounds`：本次修复循环最多允许 tester→debugger→tester 走多少轮（建议默认 3，用户可改）。
+- `max_no_progress_rounds`：连续多少轮没有新增进展就停止并升级给人（建议默认 2，用户可改）。
+- `rounds_used` / `no_progress_streak`：由 spec-debugger 和 spec-tester 在每轮重验后更新。
+- `status` 取值：`not-started` | `running` | `passed` | `stopped-budget` | `stopped-no-progress` | `escalated`。
+
 ## Open Questions / Blockers
 
 | id | owner | question_or_blocker | status | resolution |
@@ -182,7 +199,7 @@ updated_at: {ISO8601}
 ```
 
 记录规则：
-- TeamLead 维护 `lead/team-context.md` 的结构、frontmatter、`Current Run Path`、`Runtime Handles`、`Artifact Registry`、`Gate Decisions`、`Handoffs`、`Open Questions / Blockers` 和 `Next Action`。
+- TeamLead 维护 `lead/team-context.md` 的结构、frontmatter、`Current Run Path`、`Runtime Handles`、`Artifact Registry`、`Gate Decisions`、`Handoffs`、`Loop Budget`、`Open Questions / Blockers` 和 `Next Action`。
 - 所有角色可共同维护 `Task Progress`：只追加或更新自己负责的任务行，完成产物后立即记录 `status`、`artifact`、`completed_at` 和 `updated_by`。
 - 发现或解决问题的角色可共同维护 `Problem Resolution Log`：只追加或更新自己发现/处理的问题行，记录问题、解决方案摘要、关联产物、状态和 `updated_by`。
 - TeamLead 每次 spawn、resume、send message、stop 或 close 角色线程后更新 `lead/team-context.md` 的控制面信息。
@@ -191,8 +208,9 @@ updated_at: {ISO8601}
 - Hook 只负责文件事件、runtime handle、artifact 状态、时间戳等事实同步，不负责 `Next Action`、gate decision、handoff reason 或 blocker 业务判断。
 - `lead/team-context.md` 是当前 Spec 的运行账本权威来源；角色产物只链接它，不复制运行状态正文。
 - `Current Run Path` 记录当前任务实际走过的流程路径；`Task Progress` 记录已经完成的任务；`Problem Resolution Log` 记录谁发现问题、谁解决问题、解决产物在哪里。
-- 除 `Task Progress` 和 `Problem Resolution Log` 外，非 TeamLead 角色不要直接修改其他区块；如需变更控制面信息，向 TeamLead 提交说明。
+- 除 `Task Progress`、`Problem Resolution Log` 和修复循环中的 `Loop Budget` 外，非 TeamLead 角色不要直接修改其他区块；如需变更控制面信息，向 TeamLead 提交说明。
 - `agent_id`、`thread_id`、`session_id` 是运行时 handle，不作为跨 Spec 的长期身份；跨 Spec 只复用项目级角色定义。
+- OMP 运行时优先记录 `task` spawn 返回的 `agent_id`（`agent://<id>` 句柄）和子 Agent job id；角色间用 `irc` 协作时按角色 id（如 `spec-tester`）寻址，handoff 仍落盘到 `Handoffs` 与 `Problem Resolution Log`。
 - Claude Code 运行时优先记录 subagent `agent_id` 和对应 transcript/session 信息。
 - Codex 运行时优先记录 `/agent` 可见线程或当前 session handle；如 CLI 不暴露稳定 ID，记录 runtime agent name、当前 session 线索和最近产物路径。
 - 不记录 token、API key、私有凭据或不可提交的本机绝对敏感路径。
@@ -247,10 +265,18 @@ TeamLead → 下游角色：先查 lead/team-context.md；可恢复则继续同�
 阶段四：测试
   TeamLead → 启动/恢复 spec-tester 执行测试
   [如有 bug] spec-tester → bug handoff → TeamLead
+             TeamLead → 用 intent-confirmation 与用户确认本次修复循环预算
+                        （max_rounds 建议 3，max_no_progress_rounds 建议 2，用户可改）
+                        → 写入 lead/team-context.md 的 Loop Budget，status=running
              TeamLead → 启动/恢复 spec-debugger
-             spec-debugger 修复 → TeamLead
+             spec-debugger 修复 → 更新 rounds_used / no_progress_streak → TeamLead
              TeamLead → 启动/恢复 spec-tester 重新验证
-             spec-tester 验证通过 → 继续
+             spec-tester 验证 → 更新 Loop Budget 进展信号
+             [验证通过] Loop Budget status=passed → 继续
+             [仍失败且未触上限] 回到 spec-debugger 下一轮
+             [触发 max_rounds 或 max_no_progress_rounds]
+                        → spec-tester/spec-debugger 停止，status=stopped-budget/stopped-no-progress
+                        → TeamLead 升级给用户决定（继续加预算 / 改方案 / 暂停）
   spec-tester → tester/test-report.md → TeamLead
   TeamLead → 用户确认 tester/test-report.md
   [可选审查] TeamLead → 启动/恢复 spec-reviewer
@@ -271,9 +297,20 @@ TeamLead → 下游角色：先查 lead/team-context.md；可恢复则继续同�
 | 需求对齐 | TeamLead | 需求理解正确 |
 | Spec 审阅 | TeamLead | `writer/plan.md` + `tester/test-plan.md` |
 | 实现确认 | TeamLead | `executor/summary.md` |
+| 修复循环预算 | TeamLead | 进入修复循环前确认 `max_rounds` 和 `max_no_progress_rounds`（带建议默认值，用户可改） |
 | 诊断确认 | TeamLead | `debugger/debug-xxx.md`（如有） |
 | 测试报告确认 | TeamLead | `tester/test-report.md` |
+| 修复循环升级 | TeamLead | 触发预算上限或连续无进展时，确认继续加预算 / 改方案 / 暂停 |
 | 归档确认 | spec-ender | 是否归档 |
+
+## 修复循环进展信号
+
+进入阶段四的 spec-tester ↔ spec-debugger 修复循环时，TeamLead 维护 `lead/team-context.md` 的 `Loop Budget`：
+
+- **预算来自用户**：`max_rounds` 和 `max_no_progress_rounds` 不写死在 Skill 中。每次进入修复循环前，TeamLead 用 `intent-confirmation` 向用户确认，带建议默认值（3 轮 / 连续 2 轮无进展），用户可直接接受或改写。
+- **每轮记账**：spec-debugger 修复后、spec-tester 重验后，各自更新 `rounds_used` 和 `no_progress_streak`。
+- **进展的定义**：一轮算"有进展"当且仅当出现以下至少一项——新增通过的测试用例、失败范围缩小、定位到此前未知的根因、产生新的可验证证据。仅写了新总结但上述都没有，记为"无进展"，`no_progress_streak` 加一。
+- **停止与升级**：`rounds_used` 达到 `max_rounds`，或 `no_progress_streak` 达到 `max_no_progress_rounds` 时，停止循环并由 TeamLead 升级给用户，不自行无限重试。
 
 ## 后续动作
 
@@ -290,3 +327,4 @@ TeamLead → 下游角色：先查 lead/team-context.md；可恢复则继续同�
 - 尝试创建 TeamLead 角色（当前 Agent 本身就是 TeamLead）
 - 假设角色之间可以直接通信，绕过 TeamLead 中转
 - 阶段转换时未等待用户确认就继续
+- 未确认 Loop Budget 就进入修复循环，或预算触顶后仍继续 handoff

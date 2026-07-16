@@ -1,4 +1,5 @@
 ---
+disable-model-invocation: true
 name: spec-update
 description: 当同一个活跃 Spec 需要小迭代、补充需求、修正方案或优化实现，且原 Spec 目录已有 writer/plan.md + executor/summary.md 时使用。不要用于新功能从零设计。
 ---

@@ -38,6 +38,12 @@ rk-flow init
 > - 5 阶段流程，每个阶段转换有用户确认门禁
 > - 通过 `lead/team-context.md` 记录运行路径、角色实例、产物、完成项和问题解决
 
+> **运行契约（Run Contract）** - 先写刹车，再写循环
+> - 每个核心工作流 Skill 头部都有一张「运行契约」表：输入、权限、验证、停止、升级
+> - 把 Skill 当成有边界的循环单元，而不是一段无界的提示词；强调"什么时候停、什么时候交还给人"
+> - spec-test ↔ spec-debug 修复循环用 `lead/team-context.md` 的 `Loop Budget` 落实停止条件：`max_rounds` / `max_no_progress_rounds` 由用户进入循环前确认，触发上限即停止并升级
+> - 适用范围：7 个核心工作流 Skill + 3 个记忆管理 Skill（exp-search/exp-reflect/exp-write）；领域 Skill 不强制
+
 
 ## 架构概览
 
@@ -117,7 +123,7 @@ rk-flow init
 │  AGENTS.md           → 项目身份 + 入口清单 + 路由（薄入口）                 │
 │  .agents/roles/      → CLI 中立的项目级角色定义                              │
 │  .agents/hooks/      → Team Context 自动记账的中立 Hook 协议                 │
-│  .claude/.codex      → 运行时 Agent / Hook 适配                              │
+│  .omp/.claude/.codex → 运行时 Agent / Hook 适配                              │
 │  .agents/rules/      → 长期规则 + 项目偏好 + 前端风格（每文件 ≤ 20 行）      │
 │  spec/*/*/lead/      → 每个 Spec 的 team-context 运行账本                    │
 │  spec/context/       → 项目级结构化经验与知识（显式层）                       │
@@ -130,7 +136,9 @@ rk-flow init
 
 ### 运行时约定
 
-R&K Flow 文档中的“创建团队、创建角色、通知角色、请求用户确认”都是**抽象协作动作**，不是跨平台固定 API。项目初始化时会创建中立角色定义，运行时再由 Claude Code、Codex 或其他 CLI 适配成自己的项目级 Agent / Subagent。
+R&K Flow 文档中的“创建团队、创建角色、通知角色、请求用户确认”都是**抽象协作动作**，不是跨平台固定 API。项目初始化时会创建中立角色定义，运行时再由 OMP（Oh My Pi）、Claude Code、Codex 或其他 CLI 适配成自己的项目级 Agent / Subagent。
+
+> **推荐运行时：OMP（Oh My Pi）。** R&K Flow 优先面向 OMP 设计、并在 OMP 上端到端验证；新项目若无特定约束，**首选 OMP**。原生 `task` spawn 对应角色层、hook 事件总线对应账本记账层、`session.compacting` 对应上下文恢复层——三对三盖住 R&K 的角色 / 账本 / 恢复三大支柱，是目前契合度最高、唯一能在上下文压缩时自动重注入落盘账本的运行时。Claude Code、Codex 及其它 CLI 为受支持的备选适配，按各自能力降级。
 
 | 抽象动作 | 含义 | 不支持多 Agent 时 |
 |----------|------|------------------|
@@ -148,6 +156,8 @@ R&K Flow 文档中的“创建团队、创建角色、通知角色、请求用�
 | 层级 | 路径 | 作用 |
 |------|------|------|
 | 中立角色定义 | `.agents/roles/<role-id>.md` | 项目级角色的权威定义，跨 CLI 共享 |
+| OMP 适配 | `.omp/agents/<role-id>.md` | OMP 通过 `task` 发现并 spawn 的项目 Agent；只发现 `.omp/agents/`，不读 `.claude/.codex` |
+| OMP Hook | `.omp/hooks/post/team-context-sync.ts` | 监听 `tool_result`/`agent_*`/`turn_end` 自动记账，并在 `session.compacting` 重注入账本 |
 | Claude Code 适配 | `.claude/agents/<role-id>.md` | Claude Code 可发现的项目 Agent |
 | Codex 适配 | `.codex/agents/<role-id>.toml` | Codex 可 spawn 的项目 Agent，`name` 使用 snake_case |
 | Hook 协议 | `.agents/hooks/team-context-hook-contract.md` | 自动维护 `lead/team-context.md` 的中立事件约定 |
@@ -168,11 +178,13 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/lead/team-context.md
 - 产物注册表、跨角色 handoff、开放问题和下一步动作
 - 共享完成区：`Task Progress`
 - 共享问题区：`Problem Resolution Log`
+- 修复循环预算区：`Loop Budget`（test-debug 循环的 `max_rounds` / `max_no_progress_rounds` / `rounds_used` / `no_progress_streak`）
 
 维护边界：
 - TeamLead 维护 frontmatter、运行路径、Runtime Handles、Artifact Registry、Gate Decisions、Handoffs、Open Questions / Blockers、Next Action。
 - 所有角色可共同维护 `Task Progress`，但只追加或更新自己负责的任务行。
 - 发现或解决问题的角色可共同维护 `Problem Resolution Log`，但只追加或更新自己相关的问题行。
+- `Loop Budget` 的上限值由用户在进入修复循环前通过 TeamLead 确认；`rounds_used` / `no_progress_streak` 由 spec-debugger 和 spec-tester 每轮更新，触发上限时停止循环并升级给用户。
 - Hook 只自动记录事实事件，不推断业务结论、门禁决策、handoff 原因或下一步动作。
 
 ### 角色与 Skill 对照
@@ -192,7 +204,7 @@ R&K Flow 明确区分**角色**（Who）和 **Skill**（How）。角色是 Agent
 
 ### 初始化
 
-项目首次使用时，调用 `spec-init` 检查/初始化 Git 仓库，并搭建完整项目骨架（AGENTS.md、.agents/rules/、.agents/skills/、.agents/roles/、.agents/hooks/、spec/ 目录、记忆系统、Obsidian Vault），同时生成 Claude Code / Codex 等运行时适配文件。
+项目首次使用时，调用 `spec-init` 检查/初始化 Git 仓库，并搭建完整项目骨架（AGENTS.md、.agents/rules/、.agents/skills/、.agents/roles/、.agents/hooks/、spec/ 目录、记忆系统、Obsidian Vault）。初始化时选择运行环境，只生成 OMP（推荐）、Claude Code 或 Codex 中对应的一套适配文件。
 
 每次开始新任务时，调用 `spec-start` 启动 Agent Teams：
 
@@ -344,8 +356,30 @@ exp-reflect 经验反思 + 规范维护审查
 | Skill | 功能 | 在 Spec 流程中的作用 |
 |-------|------|---------------------|
 | `intent-confirmation` | 确认用户意图 | **在执行任务前**避免理解偏差，确保 Agent 正确理解需求 |
+| `loop-design` | 帮用户把重复任务设计成有边界的 Loop | 复用 intent-confirmation 澄清后，产出 loop 定义（运行契约 + 预算）；可服务 R&K Flow 内 loop 或自定义 loop，只产出定义不驱动执行 |
 | `skill-creator` | 创建新 Skill 的指南 | 扩展能力时参考 |
 | `find-skills` | 搜索和安装开源 Skill | 从 skills.sh 生态发现新能力 |
+
+#### loop-design 的定位
+
+`loop-design` 不属于某个固定角色，也不在 Spec 执行链路上——它**只产出 Loop 定义，不驱动执行**。先由 `intent-confirmation` 把意图澄清清楚，再把重复任务设计成一个有边界的 Loop（运行契约 + Loop Budget），产出的定义既可套用到 R&K Flow 内的 loop（如 `spec-test ↔ spec-debug` 修复循环），也可用于自定义 loop。
+
+```text
+intent-confirmation（澄清意图）
+        │  复用澄清结果
+        ▼
+loop-design（设计有边界的 Loop）
+        │  产出 Loop 定义：运行契约 + Loop Budget
+        ▼
+┌──────────────────────────────────────────┐
+│ R&K Flow 内 loop                           │  例：spec-test ↔ spec-debug
+│ （套用 Loop Budget：max_rounds /           │       修复循环
+│   max_no_progress_rounds 触发即停并升级）  │
+│ 或 自定义 loop                              │
+└──────────────────────────────────────────┘
+        ▲
+        └─ loop-design 只产出定义，不直接驱动循环执行
+```
 
 ## Spec 目录结构
 
@@ -366,7 +400,7 @@ spec/
         └── know-xxx-标题.md  # 知识详情
 
 运行时原生记忆                 # Auto Memory（自动层，由当前 CLI 管理）
-    └── 具体位置由 Claude Code / Codex 等运行环境决定
+    └── 具体位置由 OMP / Claude Code / Codex 等运行环境决定
 ```
 
 每个 Spec 目录遵循以下命名规范：
@@ -600,7 +634,10 @@ spec-tester：
   按 tester/test-plan.md 执行测试用例
   测试代码自动采集 tester/artifacts/test-logs/<run-id>/ 下的日志/JSON/证据
   发现 bug → 在 lead/team-context.md 的 Problem Resolution Log 记录问题并通知 TeamLead
-  TeamLead → spec-debugger 修复 → TeamLead → spec-tester 重新验证
+  TeamLead → 用 intent-confirmation 与用户确认修复循环预算（max_rounds / max_no_progress_rounds）
+           → 写入 lead/team-context.md 的 Loop Budget
+  TeamLead → spec-debugger 修复（每轮更新 rounds_used / no_progress_streak）→ TeamLead → spec-tester 重新验证
+  触发预算上限或连续无进展 → 停止循环 → TeamLead 升级给用户（继续加预算 / 改方案 / 暂停）
   产出 tester/test-report.md
 
 可选：
@@ -633,7 +670,101 @@ spec-ender → 通知 TeamLead，Teams 进入待机
 
 **小需求 / 快速迭代**：直接单独调用某个 Skill，例如只用 `spec-write` 写方案、只用 `spec-update` 做小改动，无需启动完整的 Agent Teams 流程。
 
-**非 Claude Code / Codex 用户**（Cursor、Windsurf 等）：这套 Skills 同样适用。将 `spec-start` 的流程交给单 Agent 按顺序执行，并使用 `.agents/roles/` 与 `lead/team-context.md` 保存状态。每个 Skill 文件都是独立的 Markdown 提示词，可以直接粘贴到任意 AI 编辑器中使用。
+**非 OMP / Claude Code / Codex 用户**（Cursor、Windsurf 等）：这套 Skills 同样适用。将 `spec-start` 的流程交给单 Agent 按顺序执行，并使用 `.agents/roles/` 与 `lead/team-context.md` 保存状态。每个 Skill 文件都是独立的 Markdown 提示词，可以直接粘贴到任意 AI 编辑器中使用。
+
+### Claude Code 新特性增强用法
+
+R&K Flow 不依赖 Claude Code 的 `/goal` 或 Dynamic Workflows；它们只是 Claude Code 用户的可选增强层。推荐原则：
+
+- `/goal` 适合让 Claude Code 按 R&K Flow 持续推进，直到实现、测试和审查条件满足。
+- Dynamic Workflows 适合由 TeamLead 在探索、测试、审查阶段发起并行扫描。
+- Workflow 可以并行收集素材，但最终状态必须写回当前 Spec 目录。
+- 不建议让多个 workflow agent 同时修改同一批代码文件。
+
+#### 示例 1：用 `/goal` 自动推进一个完整 Spec
+
+```text
+/goal 使用 /spec-start 启动一个新 Spec，目标是实现「用户登录失败次数限制」功能。
+请按 R&K Flow 推进：探索 → plan.md → 实现 → 测试 → review。
+无需在每个阶段停下来问我，除非发现需求不清、会破坏现有接口、需要删除数据或涉及高风险改动。
+
+完成条件：
+1. executor/summary.md 已生成
+2. tester/test-report.md 显示关键用例通过
+3. reviewer/review.md 没有高优先级问题
+4. 构建和相关测试命令通过
+5. 最后给出改动摘要和验证证据
+```
+
+#### 示例 2：先开 Spec，再让 `/goal` 接管推进
+
+```text
+/spec-start 为「personal-web 增加文章搜索高亮」创建 Spec。
+```
+
+等 `spec-start` 建好上下文后：
+
+```text
+/goal 从当前 Spec 继续推进，直到实现完成、测试通过、review 无阻塞问题。
+阶段间不用反复确认，按 R&K Flow 写回所有角色产物。
+如果 plan.md 与实际代码冲突，停止并说明冲突点。
+```
+
+#### 示例 3：让 TeamLead 发起 Dynamic Workflow 做探索
+
+```text
+/spec-start 为「重构订单结算模块」创建 Spec。
+
+TeamLead：在 spec-explore 阶段使用 Claude Code Dynamic Workflow 做并行探索。
+请让 workflow 分成以下方向：
+1. 订单状态流转
+2. 支付与退款调用链
+3. 数据模型和数据库写入点
+4. 权限与异常处理
+5. 现有测试覆盖和缺口
+
+要求：
+- workflow 只读代码，不修改文件
+- 最终汇总到 explorer/exploration-report.md
+- 标出高风险区域、建议改动边界和测试重点
+```
+
+#### 示例 4：让 TeamLead 发起 Dynamic Workflow 做审查
+
+```text
+TeamLead：当前 executor/summary.md 已完成。
+请在 spec-review 阶段使用 Dynamic Workflow 并行审查实现。
+
+分工：
+1. 对照 writer/plan.md 检查功能完整性
+2. 检查接口签名、数据结构、命名是否一致
+3. 检查是否有 Spec 未定义的额外实现
+4. 检查测试证据是否覆盖关键路径
+5. 检查潜在安全、权限、回归风险
+
+要求：
+- 不修改代码
+- 所有发现汇总进 reviewer/review.md
+- 每个问题必须带 Spec 位置和代码位置
+```
+
+#### 示例 5：测试阶段并行扩展覆盖
+
+```text
+TeamLead：让 spec-tester 使用 Dynamic Workflow 扩展测试覆盖。
+请并行分析以下测试面：
+1. 正常用户路径
+2. 空值和边界输入
+3. 权限失败路径
+4. 网络/API 异常路径
+5. 回归风险路径
+
+输出：
+- 更新 tester/test-plan.md
+- 执行可运行的测试
+- 把日志、截图、trace 或命令输出放入 tester/artifacts/test-logs/
+- 最终生成 tester/test-report.md
+```
 
 ## 记忆系统
 
@@ -927,11 +1058,12 @@ created: YYYY-MM-DD
 /exp-reflect      # 反思并沉淀经验
 /find-skills      # 搜索开源 Skill
 /intent-confirmation  # 确认用户意图
+/loop-design      # 设计有边界的重复任务 Loop
 ```
 
 ## 技术栈
 
-- **AI Agent**: Claude Code / Codex / 兼容 AI 编程 Agent
+- **AI Agent**: OMP（推荐）/ Claude Code / Codex / 兼容 AI 编程 Agent
 - **文档系统**: Obsidian
 - **版本控制**: Git
 - **文档格式**: Obsidian Flavored Markdown
@@ -962,23 +1094,36 @@ created: YYYY-MM-DD
 1. 参考 `skill-creator/SKILL.md` 的指南
 2. 在 `.agents/skills/` 下创建新目录
 3. 编写 SKILL.md 文件
-4. 更新本 README 的 Skills 列表
+4. 核心工作流 / 记忆管理类 Skill 在标题后补一张「运行契约」表（输入/权限/验证/停止/升级）
+5. 更新本 README 的 Skills 列表
 
 ### 更新现有 Skill
 
 1. 直接编辑对应 Skill 的 SKILL.md
 2. 遵循 Skill 的更新规范
-3. 更新相关文档引用
+3. 修改职责或边界时，同步更新该 Skill 的「运行契约」表
+4. 更新相关文档引用
 
 ---
 
-**版本**: 2.4.1
-**最后更新**: 2026-04-30
+**版本**: 2.5.0
+**最后更新**: 2026-06-16
 **维护者**: 项目团队
 
 ---
 
 ## 更新日志
+
+### v2.5 (2026-06-16) - 运行契约 + loop-design + OMP 运行时
+
+**核心改进**：
+
+1. **运行契约（Run Contract）**：为 7 个核心工作流 Skill + 3 个记忆管理 Skill（exp-search/exp-reflect/exp-write）头部引入「运行契约」表，统一声明输入、权限、验证、停止、升级，把每个 Skill 当成有边界的循环单元。
+2. **Loop Budget 停止条件**：`spec-test ↔ spec-debug` 修复循环在 `lead/team-context.md` 新增 `Loop Budget` 区，`max_rounds` / `max_no_progress_rounds` 由用户进入循环前确认，触发上限即停止并升级。
+3. **新增 `loop-design` Skill**：复用 `intent-confirmation` 澄清后，把重复任务设计成有边界的 Loop（运行契约 + 预算），只产出定义不驱动执行，可服务 R&K Flow 内 loop 或自定义 loop。
+4. **OMP 成为推荐运行时**：补充 `.omp/agents/` 角色映射、项目 Hook 与 `session.compacting` 落盘上下文恢复；Claude Code / Codex 保留为备选适配。
+5. **显式调用策略**：对上游已标记且本仓库保留的 Skills 增加 `disable-model-invocation: true`。
+6. **仓库治理**：`.gitignore` 增加 `*.gatebak`、运行时产物（`*.zip`/`*.sqlite*`/`*.log`）、`.system/` 和 R&K flow 运行时文件忽略规则；移除已废弃的 minimax-* / pptx-generator / ding-yuanying-perspective Skill；README 与 npm package 版本同步到 2.5.0。
 
 ### v2.4.1 (2026-04-30) - AGENTS 薄入口 + rules 偏好分层
 

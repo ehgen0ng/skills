@@ -68,18 +68,80 @@ Return results to TeamLead only, with artifact paths and any requested downstrea
 """
 ```
 
-Also create `.codex/config.toml` if absent, or merge these settings if safe:
-
-```toml
-[agents]
-max_threads = 7
-max_depth = 1
-```
-
 Codex CLI note: `/agent` shows active spawned agent threads. It is not a
 library view of all files under `.codex/agents/`. To verify discovery, ask
 Codex explicitly to spawn a project agent such as `spec_explorer`, then inspect
 the active thread with `/agent`.
+
+OMP (Oh My Pi) project adapter path: `.omp/agents/<role-id>.md`
+
+OMP only discovers task agents under `.omp/agents/` and deliberately skips
+`.claude/agents` and `.codex/agents` (their frontmatter is not the OMP
+task-agent contract). The frontmatter must include `name` and `description`
+(missing either makes the definition invalid and silently skipped); the whole
+body becomes the agent's system prompt. Keep the neutral role id and file paths
+hyphenated; `name` is the hyphenated role id.
+
+```markdown
+---
+name: <role-id>
+description: <one-line role purpose and when TeamLead should use it>
+# optional OMP task-agent fields:
+# model: <provider/model-id>        # per-role model, mirrors modelRoles
+# thinkingLevel: high               # off|minimal|low|medium|high|xhigh
+# tools: read, search, find, lsp    # CSV or array; restricts available tools
+# spawns: ""                        # *|CSV; controls which agents this role may spawn
+# read-summarize: false             # return raw file content instead of summaries
+---
+
+You are <role-id> in the R&K Flow Spec workflow.
+Read `.agents/roles/<role-id>.md` and follow the referenced `<required_skill>` protocol.
+Return results to TeamLead only, with artifact paths and any requested downstream handoff.
+```
+
+OMP runtime notes:
+
+- TeamLead is the current OMP main agent and spawns these 7 roles via the `task`
+  tool; inter-role coordination (e.g. spec-tester <-> spec-debugger fix loop)
+  uses OMP's `irc` subagent messaging, with handoffs still persisted to
+  `lead/team-context.md`.
+- `.agents/skills/` is already OMP's native `agents`-provider skill path
+  (gated by `enableAgentsProject`), so R&K skills work out of the box with no
+  separate skill adapter.
+- Mind OMP's `task.maxRecursionDepth`: TeamLead-spawned roles sit at depth 1; a
+  role that must spawn further subagents needs an explicit `spawns` field and
+  must not exceed the depth cap.
+- Do not write to `~/.omp/agent/agents/` unless the user explicitly asks for a
+  personal global agent. Do not overwrite existing `.omp/agents/*.md`; explain
+  diffs and wait for confirmation before updating.
+
+### OMP Per-Role Field Mapping
+
+These are the recommended OMP task-agent frontmatter fields per role. They are
+defaults, not hard requirements: tune `model`/`thinkingLevel` to the project's
+configured models. The body of every `.omp/agents/<role-id>.md` still begins by
+reading the neutral `.agents/roles/<role-id>.md`.
+
+| role-id | tools | spawns | thinkingLevel | read-summarize | rationale |
+|---------|-------|--------|---------------|----------------|-----------|
+| spec-explorer | `read, search, find, lsp, web_search` | `""` | high | (keep summaries) | Read-only scout; never edits. Mirrors the bundled `explore` agent so it cannot mutate the repo during探索. |
+| spec-writer | `read, search, find, lsp` | `""` | high | false | Designs the plan; reads source verbatim (no structural elision) to reason about接口边界. Does not write code, only `writer/plan.md`. |
+| spec-tester | (all default) | `""` | medium | (keep summaries) | **Delegation exception**: unlike OMP's generic fan-out workers, spec-tester MUST run real tests and collect evidence. Do NOT apply the "subagents skip verification" default to this role. |
+| spec-executor | (all default) | `""` | medium | false | Implements strictly per已确认 plan; reads verbatim to match existing code exactly. Edits/writes freely within scope. |
+| spec-debugger | (all default) | `""` | xhigh | false | Root-cause diagnosis benefits from the strongest reasoning; reads verbatim. Does not touch已确认 `writer/plan.md`. |
+| spec-reviewer | `read, search, find, lsp` | `""` | high | false | Audits consistency/completeness/risk only; read-only, never edits实现. |
+| spec-ender | (all default) | `""` | medium | (keep summaries) | Synthesizes收尾, runs exp-reflect, archives, commits, pushes, PR. Needs full tool access including `bash` for git. |
+
+Notes:
+- `spawns: ""` everywhere keeps all 7 roles at depth 1 under TeamLead, well clear
+  of `task.maxRecursionDepth`. Only widen `spawns` if a role provably needs to
+  fan out further, and confirm the depth cap is not exceeded.
+- `model` is intentionally omitted from the table: set it per role only when the
+  project configures distinct models (e.g. a stronger model for spec-debugger),
+  otherwise inherit the session default.
+- spec-explorer / spec-reviewer keep `read` structural summaries (default) for
+  cheap wide scanning; spec-writer / spec-executor / spec-debugger set
+  `read-summarize: false` because they reason about exact code, not shape.
 
 ## Role Definitions
 

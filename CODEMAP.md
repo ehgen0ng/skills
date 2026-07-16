@@ -6,15 +6,16 @@
 
 **仓库地址**：`github.com/HHU3637kr/skills`
 **当前分支**：`master`
-**文档口径**：v2.4.1
-**npm package**：`@rnking3637/rk-flow` v2.3.0
+**上游同步基线**：`df0921239e431b79029fa94058d09382b9b00869`（`df09212`，2026-06-26）
+**文档口径**：v2.5.0
+**npm package**：`@rnking3637/rk-flow` v2.5.0
 
 核心架构与 README 保持一致：
 - 5 阶段 Spec 工作流：需求对齐 → 探索/设计/测试计划 → 实现 → 测试/调试/审查 → 收尾
 - 7 个项目级角色：explorer、writer、tester、executor、debugger、reviewer、ender
 - TeamLead 是当前主 Agent，不额外创建 TeamLead 子 Agent
 - 每个 Spec 使用角色目录保存产物，并由 `lead/team-context.md` 记录运行账本
-- Claude Code、Codex 或其他 CLI 只作为运行时适配层，核心协议保持中立
+- 运行时适配层保持中立，OMP（Oh My Pi）为**推荐运行时**（首选）：`.omp/agents/` 角色 + `.omp/hooks/post/` 记账与 `session.compacting` 恢复，契合度最高且唯一支持压缩时自动重注入落盘账本；Claude Code、Codex 等为受支持的备选
 
 ---
 
@@ -40,9 +41,9 @@ skills/
 ├── spec-init/                         # 项目首次接入 R&K Flow
 │   ├── SKILL.md                       # 创建项目骨架、角色定义、运行时适配和 Hook 协议
 │   └── references/
-│       ├── project-agent-roles.md     # 7 个项目级角色的中立定义与 Claude/Codex 适配模板
+│       ├── project-agent-roles.md     # 7 个项目级角色的中立定义与 OMP/Claude/Codex 适配模板
 │       ├── team-context-hook-contract.md # lead/team-context.md 自动记账的中立 Hook 协议
-│       └── runtime-hook-examples.md      # Claude Code / Codex 项目级 Hook 配置样例
+│       └── runtime-hook-examples.md      # OMP / Claude Code / Codex 项目级 Hook 配置样例
 │
 ├── spec-start/                        # 每次启动新 Spec
 │   └── SKILL.md                       # 创建角色目录、Team Context，启动阶段二
@@ -89,6 +90,10 @@ skills/
 ├── exp-reflect/                       # Spec 收尾经验反思与分流
 ├── exp-write/                         # 写入 experience/knowledge
 ├── intent-confirmation/               # 前置意图确认
+├── loop-design/                       # 把重复任务设计成有边界的 Loop
+│   ├── SKILL.md                       # 交互式产出 loop 定义（只产出不执行）
+│   └── references/
+│       └── loop-definition-template.md
 ├── obsidian-markdown/                 # Obsidian Markdown 支持
 ├── obsidian-bases/                    # Obsidian Bases 支持
 ├── obsidian-plugin-dev/               # Obsidian 插件开发参考
@@ -96,8 +101,6 @@ skills/
 ├── skill-creator/                     # Skill 创建/验证工具
 └── find-skills/                       # Skill 生态发现
 ```
-
-仓库中还包含若干独立领域 Skill（如 frontend、fullstack、mobile、office、nuwa、perspective 等），它们不属于 R&K Flow 核心链路，但可以被具体 Spec 在探索、实现或测试阶段按需调用。
 
 ---
 
@@ -127,26 +130,28 @@ skills/
 │   │   └── spec-ender.md
 │   └── hooks/
 │       └── team-context-hook-contract.md
+├── .omp/
+│   ├── agents/<role-id>.md             # OMP 项目 Agent 适配（推荐）
+│   └── hooks/post/team-context-sync.ts # OMP 记账与 session.compacting 恢复
 ├── .claude/
 │   ├── settings.json                  # Claude Code 项目级 Hook 配置（如需）
 │   └── agents/<role-id>.md            # Claude Code 项目 Agent 适配
 ├── .codex/
 │   ├── agents/<role-id>.toml          # Codex 项目 Agent 适配
-│   ├── hooks.json                     # Codex 项目级 Hook 配置（如需）
-│   └── config.toml
+│   └── hooks.json                     # Codex 项目级 Hook 配置（如需）
 └── spec/
     └── context/
         ├── experience/
         └── knowledge/
 ```
 
-`.agents/roles/` 是角色定义的权威来源；`.claude/`、`.codex/` 只是运行时适配层。Codex agent 文件名使用 hyphenated role id，TOML `name` 使用 snake_case，例如 `spec-explorer.toml` 中 `name = "spec_explorer"`。
+`.agents/roles/` 是角色定义的权威来源；`.omp/`、`.claude/`、`.codex/` 只是运行时适配层。OMP 是推荐运行时；Codex agent 文件名使用 hyphenated role id，TOML `name` 使用 snake_case，例如 `spec-explorer.toml` 中 `name = "spec_explorer"`。
 
 ### 运行时角色
 
 | 角色 | Skill | 主要产物 | 运行时规则 |
 |------|-------|----------|------------|
-| TeamLead | `spec-start`, `intent-confirmation` | `lead/team-context.md` | 当前主 Agent，负责阶段、门禁、handoff、用户交互 |
+| TeamLead | `spec-start`, `intent-confirmation` | `lead/team-context.md` | 当前主 Agent，负责阶段、门禁、handoff、用户交互；OMP 下即 OMP 主 Agent，用 `task` spawn 角色、`irc` 协作 |
 | spec-explorer | `spec-explore` | `explorer/exploration-report.md` | 收集背景和风险，结果交回 TeamLead |
 | spec-writer | `spec-write` | `writer/plan.md` | 只写实现方案，不写测试计划 |
 | spec-tester | `spec-test` | `tester/test-plan.md`, `tester/test-report.md` | 设计和执行测试，不直接修 bug |
@@ -201,6 +206,7 @@ spec-start → lead/team-context.md
 | Skill | 作用 |
 |-------|------|
 | `intent-confirmation` | 在理解风险较高时对齐用户意图 |
+| `loop-design` | 把重复任务设计成有边界的 Loop，产出 loop 定义（运行契约 + 预算），只产出不执行 |
 | `skill-creator` | 创建或维护 Skill |
 | `find-skills` | 发现外部 Skill |
 
@@ -255,6 +261,7 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
 | Runtime Handles | TeamLead | 记录 agent/thread/session handle |
 | Artifact Registry | TeamLead | 产物路径、状态、是否确认 |
 | Gate Decisions | TeamLead | 用户确认门禁 |
+| Loop Budget | TeamLead + tester/debugger | 修复循环（test-debug）预算：max_rounds / max_no_progress_rounds 由用户在进入循环前确认；rounds_used / no_progress_streak 每轮由 tester/debugger 更新 |
 | Handoffs | TeamLead | 跨角色交接 |
 | Open Questions / Blockers | TeamLead | 阻塞和开放问题 |
 | Next Action | TeamLead | 下一步动作 |
@@ -299,7 +306,7 @@ TeamLead → 下游角色：
 ### Hook 数据流
 
 ```
-Claude Code / Codex 原生 Hook
+OMP / Claude Code / Codex 原生 Hook
   ↓ 运行时适配器
 .agents/hooks/team-context-hook-contract.md 中立事件
   ↓
@@ -325,6 +332,7 @@ lead/team-context.md 的事实字段
 | `spec-end` | `exp-reflect` | TeamLead |
 | `spec-update` | `spec-review`, `exp-reflect` | 用户在活跃 Spec 上调用 |
 | `exp-reflect` | `exp-write`, `skill-creator` | `spec-end`, `spec-update` |
+| `loop-design` | `intent-confirmation`, `spec-start`(Loop Budget), `skill-creator` | 用户在需要设计循环时调用 |
 
 ---
 
@@ -336,7 +344,7 @@ lead/team-context.md 的事实字段
 | 文档系统 | Obsidian | wikilink、callout、frontmatter、Bases |
 | 数据格式 | Markdown, YAML, JSON Canvas | 文档和可视化结构 |
 | 版本控制 | Git | 版本历史管理 |
-| AI 运行时 | Claude Code / Codex / compatible coding agents | 项目级 Agent、Hook、resume 能力按环境适配 |
+| AI 运行时 | OMP（推荐）/ Claude Code / Codex / compatible coding agents | 项目级 Agent、Hook、resume/compacting 能力按环境适配 |
 | 安装分发 | npm CLI | `rk-flow init` |
 
 ---
@@ -344,8 +352,9 @@ lead/team-context.md 的事实字段
 ## 维护要点
 
 - README 是最高层叙事文档；CODEMAP 按 README 的组织方式维护源码地图。
+- 7 个核心工作流 Skill 和 3 个记忆管理 Skill（exp-search/exp-reflect/exp-write）标题后都有一张「运行契约」表（输入/权限/验证/停止/升级）；修改这些 Skill 的职责或边界时，同步更新其运行契约表。
 - 新增或修改核心 Skill 时，同步更新 README 的 Skills 表、Spec 目录结构和本 CODEMAP。
-- 修改角色协议时，优先更新 `spec-init/references/project-agent-roles.md`，再同步 Claude Code / Codex 适配说明。
+- 修改角色协议时，优先更新 `spec-init/references/project-agent-roles.md`，再同步 OMP / Claude Code / Codex 适配说明。
 - 修改 Team Context 字段或 Hook 行为时，优先更新 `spec-init/references/team-context-hook-contract.md`、`spec-init/references/runtime-hook-examples.md` 和 `spec-start/SKILL.md`。
 - `AGENTS.md` 保持薄入口定位；详细规则、项目偏好和前端风格落在 `.agents/rules/`。
 - 不把运行时临时上下文当成长期状态；长期状态必须落在 Spec 目录、`.agents/roles/`、`.agents/rules/` 或显式记忆系统中。
