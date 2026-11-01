@@ -15,7 +15,9 @@ Use these definitions when `spec-init` creates project-level roles. The source o
 - Non-Lead roles must not edit any other `lead/team-context.md` sections. They return control-plane changes, handoff requests, and blocker updates to TeamLead.
 - If hooks are configured, they must follow `.agents/hooks/team-context-hook-contract.md`: hooks record factual events only, while TeamLead and roles remain responsible for workflow semantics.
 - Required state must be written to `spec/`, `AGENTS.md`, `.agents/rules/`, `.agents/skills/`, or the explicit experience/knowledge store. Do not rely on hidden agent context for workflow correctness.
-- Each role writes its own artifacts under the current Spec role directory: `lead/`, `explorer/`, `writer/`, `tester/`, `executor/`, `debugger/`, `reviewer/`, `updater/`, or `ender/`.
+- Each role writes its durable documents under the current Spec role directory: `lead/`, `explorer/`, `writer/`, `tester/`, `executor/`, `debugger/`, `reviewer/`, `updater/`, or `ender/`.
+
+Temporary test tools, runtimes, emulators, caches, and generated data belong in an OS temporary directory outside the repository and must be cleaned when no longer needed. Follow `spec-test/references/temporary-resources.md`; do not copy raw evidence into role directories.
 
 ## Neutral Role File Format
 
@@ -212,7 +214,7 @@ inputs:
 outputs:
   - tester/test-plan.md
   - tester/test-report.md
-  - tester/artifacts/test-logs/<run-id>/
+  - temporary resources outside the repository, only while needed
   - bug handoff when defects are found
 handoff:
   to: TeamLead
@@ -224,7 +226,8 @@ rules:
   - 不直接修复 bug。
   - 发现 bug 时向 TeamLead 提交 bug handoff，不直接启动 spec-debugger。
   - 等 TeamLead 提供修复完成通知后重新验证。
-  - 测试证据必须通过测试运行自动采集并写入 `tester/artifacts/test-logs/<run-id>/`。
+  - 按 spec-test 的临时资源规则配置工具、缓存和数据目录；原始证据按需自动采集到仓库外系统临时目录，用完清理。
+  - 报告记录命令、工具版本、平台、结果和必要摘要，临时文件清理后仍能独立解释结论。
 ```
 
 ### spec-executor

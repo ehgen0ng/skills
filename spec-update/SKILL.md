@@ -60,7 +60,7 @@ description: 当同一个活跃 Spec 需要小迭代、补充需求、修正方�
 6. **创建任务清单**：根据 `updater/update-xxx.md` 的"实现步骤"章节创建
 7. **按方案实现更新**：严格遵循方案，不修改方案之外的代码；新增/修改函数按中文函数头注释规范说明职责，复杂逻辑说明原因和边界
 8. **编写/更新测试**：新增测试 + 修改测试 + 回归测试
-9. **运行测试验证**：全部通过才能继续
+9. **运行测试验证**：先读取 [测试临时资源管理](../spec-test/references/temporary-resources.md)，临时工具与数据按需放入仓库外系统临时目录；全部通过才能继续，结论记录后清理已无用途的临时资源
 10. **创建 updater/update-xxx-summary.md**：参照 [references/summary-template.md](references/summary-template.md)，应用 Obsidian 格式：`[[../writer/plan|设计方案]]` 双链、`> [!success]` / `> [!warning]` Callout、`#spec/更新` 标签
 11. **使用 spec-review 审查**：生成 `reviewer/update-xxx-review.md`
 12. **等待用户确认审查报告**：先调用 `mcp__obsidian-spec-confirm__spec_confirm`，超时或失败回退原生确认方式（节点 2）
@@ -79,8 +79,9 @@ description: 当同一个活跃 Spec 需要小迭代、补充需求、修正方�
 ## 后续动作
 
 完成更新后：
-1. 调用 `/exp-reflect` 进行经验反思
-2. 审查是否需要维护 `AGENTS.md` / `.agents/rules/`；只写长期规则，不写一次性实现细节
-3. 如有经验沉淀，更新 `updater/update-xxx-summary.md` 添加经验引用
-4. 更新 `lead/team-context.md` 的 `Task Progress`，必要时更新 `Problem Resolution Log`
-5. **不归档**，保留在原目录
+1. 核对临时工具、缓存、测试数据和产物均已清理；仍需排障或清理失败的资源在更新总结中记录原因和清理条件，不等到 Spec 归档才处理
+2. 调用 `/exp-reflect` 进行经验反思
+3. 审查是否需要维护 `AGENTS.md` / `.agents/rules/`；只写长期规则，不写一次性实现细节
+4. 如有经验沉淀，更新 `updater/update-xxx-summary.md` 添加经验引用
+5. 更新 `lead/team-context.md` 的 `Task Progress`，必要时更新 `Problem Resolution Log`
+6. **不归档**，保留在原目录

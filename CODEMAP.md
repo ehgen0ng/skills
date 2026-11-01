@@ -60,6 +60,7 @@ skills/
 ├── spec-test/                         # spec-tester
 │   ├── SKILL.md                       # tester/test-plan.md + tester/test-report.md
 │   └── references/
+│       ├── temporary-resources.md    # 跨平台临时工具、数据与清理规则
 │       └── web-e2e-testing.md         # Web E2E 测试策略
 │
 ├── spec-execute/                      # spec-executor
@@ -226,9 +227,7 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
 │   └── plan.md
 ├── tester/
 │   ├── test-plan.md
-│   ├── test-report.md
-│   └── artifacts/
-│       └── test-logs/<run-id>/
+│   └── test-report.md
 ├── executor/
 │   └── summary.md
 ├── debugger/
@@ -244,7 +243,7 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
     └── end-report.md
 ```
 
-`tester/artifacts/test-logs/<run-id>/` 中的日志和 JSON 证据应由测试代码或测试运行自动生成，不由 Agent 手工编写。
+测试原始证据按需由测试运行自动生成，与临时工具、运行时、模拟器和缓存一起放在仓库外系统临时目录，用完清理；Spec 报告保留可独立解释结论的必要摘要。跨平台配置与生命周期见 [测试临时资源管理](spec-test/references/temporary-resources.md)。
 
 ---
 
@@ -280,7 +279,7 @@ spec-explore   → explorer/exploration-report.md
 spec-write     → writer/plan.md
 spec-test      → tester/test-plan.md
 spec-execute   → executor/summary.md
-spec-test      → tester/test-report.md + tester/artifacts/test-logs/<run-id>/
+spec-test      → tester/test-report.md（临时工具与数据在仓库外，用完清理）
 spec-debug     → debugger/debug-*.md + debugger/debug-*-fix.md
 spec-review    → reviewer/review.md 或 reviewer/update-*-review.md
 spec-update    → updater/update-*.md + updater/update-*-summary.md

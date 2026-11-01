@@ -35,7 +35,7 @@ ls .agents/roles/spec-explorer.md
 | **TeamLead（当前 Agent）** | `intent-confirmation` | `lead/team-context.md` | 全程 |
 | spec-explorer | `spec-explore` | `explorer/exploration-report.md` | 阶段二（前置） |
 | spec-writer | `spec-write` | `writer/plan.md` | 阶段二 |
-| spec-tester | `spec-test` | `tester/test-plan.md`, `tester/test-report.md`, `tester/artifacts/test-logs/` | 阶段二 + 阶段四 |
+| spec-tester | `spec-test` | `tester/test-plan.md`, `tester/test-report.md`；临时资源在仓库外，用完清理 | 阶段二 + 阶段四 |
 | spec-executor | `spec-execute` | `executor/summary.md` | 阶段三 |
 | spec-debugger | `spec-debug` | `debugger/debug-xxx.md`, `debugger/debug-xxx-fix.md` | 阶段三/四（按需） |
 | spec-reviewer | `spec-review` | `reviewer/review.md` | 阶段四后（可选） |
@@ -60,8 +60,6 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
 ├── explorer/
 ├── writer/
 ├── tester/
-│   └── artifacts/
-│       └── test-logs/
 ├── executor/
 ├── debugger/
 ├── reviewer/
@@ -69,21 +67,21 @@ spec/<01-05分类>/<YYYYMMDD-HHMM-中文任务描述>/
 └── ender/
 ```
 
-角色产物必须写入各自目录：
+角色文档必须写入各自目录：
 
 | 归属 | 路径 |
 |------|------|
 | TeamLead | `lead/team-context.md` |
 | spec-explorer | `explorer/exploration-report.md` |
 | spec-writer | `writer/plan.md` |
-| spec-tester | `tester/test-plan.md`, `tester/test-report.md`, `tester/artifacts/test-logs/<run-id>/` |
+| spec-tester | `tester/test-plan.md`, `tester/test-report.md` |
 | spec-executor | `executor/summary.md` |
 | spec-debugger | `debugger/debug-xxx.md`, `debugger/debug-xxx-fix.md` |
 | spec-reviewer | `reviewer/review.md`, `reviewer/update-xxx-review.md` |
 | spec-update | `updater/update-xxx.md`, `updater/update-xxx-summary.md` |
 | spec-ender | `ender/end-report.md` |
 
-根目录只作为当前 Spec 容器，不直接平铺角色产物。
+根目录只作为当前 Spec 容器，不直接平铺角色文档。测试与调试开始前读取 [测试临时资源管理](../spec-test/references/temporary-resources.md)：临时工具、缓存和运行产物按需放在仓库外系统临时目录，用完清理，不创建 Spec 内的原始证据目录。
 
 ### 步骤 3：创建本次 Spec Team Context
 

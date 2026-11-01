@@ -196,7 +196,7 @@ R&K Flow 明确区分**角色**（Who）和 **Skill**（How）。角色是 Agent
 | **TeamLead（当前 Agent）** | `intent-confirmation`, `spec-start` | `lead/team-context.md` | 全程 |
 | spec-explorer | `spec-explore` | `explorer/exploration-report.md` | 阶段二（前置） |
 | spec-writer | `spec-write` | `writer/plan.md` | 阶段二 |
-| spec-tester | `spec-test` | `tester/test-plan.md`, `tester/test-report.md`, `tester/artifacts/test-logs/` | 阶段二 + 阶段四 |
+| spec-tester | `spec-test` | `tester/test-plan.md`, `tester/test-report.md`；临时资源在仓库外，用完清理 | 阶段二 + 阶段四 |
 | spec-executor | `spec-execute` | `executor/summary.md` | 阶段三 |
 | spec-debugger | `spec-debug` | `debugger/debug-xxx.md`, `debugger/debug-xxx-fix.md` | 阶段三/四（按需） |
 | spec-reviewer | `spec-review` | `reviewer/review.md`, `reviewer/update-xxx-review.md` | 阶段四后（可选） |
@@ -414,9 +414,7 @@ spec/分类目录/YYYYMMDD-HHMM-任务描述/
 │   └── plan.md                # 设计方案（spec-write 创建）
 ├── tester/
 │   ├── test-plan.md           # 测试计划（spec-test 创建）
-│   ├── test-report.md         # 测试报告（spec-test 创建）
-│   └── artifacts/
-│       └── test-logs/         # 测试代码自动采集的日志/JSON/证据
+│   └── test-report.md         # 测试结论与必要摘要（spec-test 创建）
 ├── executor/
 │   └── summary.md             # 实现总结（spec-execute 创建）
 ├── debugger/
@@ -431,6 +429,8 @@ spec/分类目录/YYYYMMDD-HHMM-任务描述/
 └── ender/
     └── end-report.md          # 收尾报告（spec-end 创建）
 ```
+
+测试、验证和排障临时生成或引入的资源（包括工具、运行时、模拟器、缓存、截图、录屏、日志和原始覆盖率）按需放在仓库外系统临时目录，用完清理；优先复用已有环境，按 Windows/macOS/Linux 的实际平台准备，不能假定重启会自动清空。Spec 只保留必要文档与结论，详见 [测试临时资源管理](spec-test/references/temporary-resources.md)。
 
 外层目录分类的是“这个 Spec 作为一件工作的主意图”；目录内部按角色目录保存生命周期产物，根目录不再平铺角色产物。`03-能力交付` 只用于新增用户可感知能力；修复、优化、重构、技术债默认优先考虑 `04-系统改进`；架构和数据模型优先考虑 `02-技术设计`；独立测试工作优先考虑 `05-验证工程`。同一活跃 Spec 的小变化使用 `spec-update` 留在原目录。
 
@@ -632,7 +632,8 @@ TeamLead → spec-tester 开始执行测试
 
 spec-tester：
   按 tester/test-plan.md 执行测试用例
-  测试代码自动采集 tester/artifacts/test-logs/<run-id>/ 下的日志/JSON/证据
+  按当前平台准备临时工具及缓存，测试代码按需将证据采集到仓库外系统临时目录
+  提取结论后清理已无用途的工具、缓存和数据，记录仍需排障的资源与清理条件
   发现 bug → 在 lead/team-context.md 的 Problem Resolution Log 记录问题并通知 TeamLead
   TeamLead → 用 intent-confirmation 与用户确认修复循环预算（max_rounds / max_no_progress_rounds）
            → 写入 lead/team-context.md 的 Loop Budget
@@ -762,7 +763,7 @@ TeamLead：让 spec-tester 使用 Dynamic Workflow 扩展测试覆盖。
 输出：
 - 更新 tester/test-plan.md
 - 执行可运行的测试
-- 把日志、截图、trace 或命令输出放入 tester/artifacts/test-logs/
+- 按需把日志、截图、trace 或命令输出写入仓库外系统临时目录，用完连同临时工具和缓存一起清理
 - 最终生成 tester/test-report.md
 ```
 

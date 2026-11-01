@@ -159,6 +159,8 @@ mkdir -p ".agents/rules"
 - 每个关键节点等待用户确认
 - 收尾时使用 exp-reflect 沉淀经验，并由 spec-end 审查是否维护 AGENTS.md / rules
 - rules 只记录长期项目约束，避免写入一次性任务细节
+- 测试临时工具、运行时、模拟器、缓存和原始数据按需放入仓库外系统临时目录，用完清理；Spec 只保留必要文档
+- 测试与调试遵守 `.agents/skills/spec-test/references/temporary-resources.md`，不假定系统重启会清理临时资源
 ```
 
 创建 `.agents/rules/documentation.md`（文档规范）：
@@ -523,9 +525,7 @@ mkdir -p ".obsidian"
 │   │       │   └── plan.md
 │   │       ├── tester/                # spec-tester 产物
 │   │       │   ├── test-plan.md
-│   │       │   ├── test-report.md
-│   │       │   └── artifacts/
-│   │       │       └── test-logs/
+│   │       │   └── test-report.md
 │   │       ├── executor/              # spec-executor 产物
 │   │       │   └── summary.md
 │   │       ├── debugger/              # spec-debugger 产物（按需）

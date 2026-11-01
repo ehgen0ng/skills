@@ -16,7 +16,7 @@ description: >
 | 项 | 本 Skill 的约定 |
 |----|----------------|
 | 输入 | `explorer/exploration-report.md`、`writer/plan.md`、`executor/summary.md`、命中的场景测试策略 |
-| 权限 | 写 `tester/test-plan.md` / `tester/test-report.md`、采集 `tester/artifacts/` 证据、可调整测试脚本/配置；不直接修复 bug、不改业务实现 |
+| 权限 | 写 `tester/test-plan.md` / `tester/test-report.md`、按需采集仓库外系统临时目录中的证据并清理、可调整测试脚本/配置；不直接修复 bug、不改业务实现 |
 | 验证 | 验收标准具体可判定、关键路径有可审计证据、证据由测试运行自动生成且已脱敏 |
 | 停止 | 测试计划/报告定稿且通过用户确认即停止；修复循环受 `Loop Budget` 约束，触发 `max_rounds` 或 `max_no_progress_rounds` 时停止发起新一轮 handoff |
 | 升级 | 发现 bug 时向 TeamLead 提交 handoff（不自行修复）；修复循环触上限或证据无法采集时，交回 TeamLead 由用户决策 |
@@ -27,11 +27,11 @@ description: >
 2. **不直接修复 bug**：发现 bug 时向 TeamLead 提交 bug handoff，由 TeamLead 启动 spec-debugger
 3. **通过 TeamLead 与 spec-writer 协作**：Spec 阶段需讨论接口边界和异常情况，确保测试覆盖完整
 4. **关键路径可观测**：测试必须验证系统关键路径有日志、trace id、事件或其他可审计证据
-5. **证据归属 tester**：端侧测试和关键路径测试的审计日志必须保存在当前 Spec 目录的 `tester/artifacts/test-logs/<run-id>/`
-6. **证据必须自动采集**：`tester/artifacts/test-logs/<run-id>/` 下的日志、JSON、trace、录屏和截图必须由测试脚本、浏览器自动化、服务日志采集或命令输出生成；Agent 不得手写、补写或伪造这些证据文件内容
+5. **临时资源用完清理**：先读取 [测试临时资源管理](references/temporary-resources.md)。运行产物和临时引入的工具、运行时、模拟器及其缓存均按需放入仓库外的系统临时目录，用完清理；Spec 只保留必要文档
+6. **证据必须自动采集**：临时目录中的日志、JSON、trace、录屏和截图必须由测试脚本、浏览器自动化、服务日志采集或命令输出生成；Agent 不得手写、补写或伪造这些证据文件内容
 7. **策略按场景加载**：不同开发场景的测试策略沉淀在 `references/`，命中场景时先读取对应策略
 8. **策略在 spec-test 内沉淀**：测试过程中发现跨项目可复用的测试方法时，更新本 Skill 的 `references/` 和策略表；不要写入当前项目的 `AGENTS.md` 或 `.agents/rules/`
-9. **状态写入职责**：测试产物创建时写 `status: 未确认`；TeamLead 确认时按项目级 status 写入职责处理，spec-tester 不手工把测试产物改成 `已确认`
+9. **状态写入职责**：测试计划和报告创建时写 `status: 未确认`；TeamLead 确认时按项目级 status 写入职责处理，spec-tester 不手工把文档改成 `已确认`
 10. **修复循环受预算约束**：重验属于 spec-tester ↔ spec-debugger 修复循环的一环，受 `lead/team-context.md` 的 `Loop Budget` 约束。每轮重验后更新 `Loop Budget` 进展信号；触发 `max_rounds` 或 `max_no_progress_rounds` 时停止发起新一轮 handoff，转为通知 TeamLead 升级给用户。
 
 ## 测试策略库
@@ -53,7 +53,7 @@ description: >
 3. **必须给 test-plan 要求**：明确该策略要求 `tester/test-plan.md` 增补哪些章节、表格或字段
 4. **必须给执行流程**：按可操作步骤描述如何执行测试，包含环境、数据、工具、日志和失败处理
 5. **必须给 test-report 要求**：明确 `tester/test-report.md` 中如何呈现证据、结论和失败信息
-6. **必须给证据与脱敏规则**：说明证据保存路径、日志类型、截图/trace/录屏要求，以及不能保存的敏感信息
+6. **必须给证据与脱敏规则**：遵守 [测试临时资源管理](references/temporary-resources.md)，说明按需采集范围、系统临时路径、清理时机及不能保存的敏感信息
 7. **必须给证据生成规则**：明确证据文件只能由测试运行自动生成，禁止 Agent 事后手写日志、JSON 或 trace
 8. **必须给常见陷阱**：列出该场景最容易漏掉或误判的点
 9. **禁止写项目一次性细节**：具体账号、真实 URL、业务私有数据、临时 workaround 不写入策略文件
@@ -146,7 +146,8 @@ tags:
 | US-001 | [角色] | [目标] | [点击/输入/跳转路径] | [UI/数据/日志断言] | [截图/console/network/backend log] |
 
 ## 覆盖率要求
-- 代码覆盖率：> 80%
+- 是否需要采集覆盖率：[按验收目标决定；不需要则不启用]
+- 代码覆盖率：[需要时填写项目要求；报告只保留汇总，原始数据用完清理]
 - 功能覆盖率：[具体要求]
 
 ## 日志与审计要求
@@ -157,12 +158,13 @@ tags:
 - 日志断言应覆盖成功、失败和拒绝/回滚路径
 
 ### 端侧审计日志
-- 端侧测试必须保留审计日志目录：`tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/`
-- 审计日志至少包含：测试 run id、时间戳、测试账号/角色（脱敏）、设备/浏览器/App 版本、操作路径、控制台日志、网络请求摘要、截图或录屏路径、失败堆栈、关联用例编号
+- 需要的原始证据自动采集到 `{ARTIFACT_DIR}/`（仓库外系统临时目录），按断言或排障需要启用截图/trace/录屏
+- 审计信息包含：测试 run id、时间戳、测试账号/角色（脱敏）、设备/浏览器/App 版本、操作路径、关联用例编号；按需采集控制台日志、网络摘要、截图或录屏、失败堆栈
+- 写明采集用途、输出配置和清理条件；报告提取结论及必要摘要后，清理无需继续排障的原始文件
 - 不得保存 token、密码、密钥、完整手机号、身份证号或真实用户隐私
 
 ## 测试环境要求
-[依赖、配置、数据准备]
+[目标平台、已有工具、临时补充的环境及版本来源、配置与数据准备；按平台使用系统临时目录，显式重定向缓存和用户数据，用完清理]
 ```
 
 ### 步骤 4：通知 TeamLead 完成
@@ -192,10 +194,10 @@ tags:
 
 按 `tester/test-plan.md` 的用例逐一执行，记录结果。
 
-每次测试运行先在当前 Spec 目录下创建 tester 审计日志目录：
+运行前按 [测试临时资源管理](references/temporary-resources.md) 分配仓库外系统临时目录 `TEST_TMP_ROOT`，准备必要工具并配置缓存及输出，将其中的产物目录记为 `ARTIFACT_DIR`。只创建本次确实需要的文件或子目录，例如：
 
 ```text
-tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/
+{ARTIFACT_DIR}/
 ├── audit.log
 ├── console.log
 ├── network-summary.json
@@ -204,16 +206,17 @@ tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/
 └── traces/
 ```
 
-根据测试类型保留证据：
+根据断言和排障需要临时采集证据，避免无用途的重复数据：
 - 后端/系统关键路径：保留关键日志片段、trace id、任务 id、事件 id 或数据库审计字段
-- Web 端测试：保留 console 日志、network 摘要、关键截图，必要时保留 trace/录屏
+- Web 端测试：采集必要的 console 日志、network 摘要，截图用于关键断言或失败现场，trace/录屏按复现需要启用
 - Web 端侧 E2E：按 [references/web-e2e-testing.md](references/web-e2e-testing.md) 执行用户场景、浏览器点击、前端控制台/网络请求/后端日志联动验证
-- iOS/Android/桌面端测试：保留设备信息、App 版本、操作路径、截图/录屏、崩溃或失败堆栈
+- iOS/Android/桌面端测试：记录设备信息、App 版本和操作路径，按需采集截图/录屏、崩溃或失败堆栈
+- 覆盖率验证：需要时采集到 `{ARTIFACT_DIR}/`，包括 V8 原始数据和自动生成的报告；提取汇总指标后清理无需继续排障的数据
 - 所有证据必须脱敏，禁止保存 token、密码、密钥和真实用户隐私
 
 证据生成规则：
 - 必须通过测试运行自动生成证据文件，例如测试脚本捕获 console/network、Playwright trace/screenshot、后端日志按 RUN_ID 过滤导出、CLI 命令输出重定向。
-- 允许 Agent 编写或调整测试脚本、测试配置、日志采集命令，让测试执行时自动写入 `tester/artifacts/test-logs/<run-id>/`。
+- 允许 Agent 编写或调整测试脚本、测试配置、日志采集命令，让测试执行时自动写入 `{ARTIFACT_DIR}/`。
 - 禁止 Agent 在测试结束后手工编辑 `audit.log`、`console.log`、`browser-console.ndjson`、`network-summary.json`、`backend.log`、`traces/` 或 `recordings/` 来“补齐证据”。
 - 如果某类证据无法自动采集，在 `tester/test-report.md` 记录缺失原因和风险；不要用手写内容替代真实证据。
 
@@ -225,7 +228,7 @@ tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/
 - 在 `Problem Resolution Log` 中追加或更新该问题行
 - `found_by` 写 `spec-tester`
 - `owner` 建议写 `spec-debugger`
-- `problem` 简述现象，`artifacts` 引用测试证据路径或即将创建的 debug 文档
+- `problem` 简述现象，`artifacts` 引用测试报告或 debug 文档；必要的临时证据路径附保留原因和清理条件
 - `status` 标记为 `open`
 - `updated_by` 写 `spec-tester`
 - 只修改 `Problem Resolution Log`，不要修改 TeamLead 控制面区块
@@ -292,7 +295,7 @@ tags:
 - 测试用例总数：X
 - 通过：X
 - 失败：X（已修复：X）
-- 代码覆盖率：X%
+- 代码覆盖率：X% / 未采集（原因）
 
 ## 测试过程中的修改记录
 
@@ -305,7 +308,10 @@ tags:
 
 ### 测试运行
 - Run ID: YYYYMMDD-HHMM-run-XXX
-- 审计日志目录: `tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/`
+- 代码版本与执行命令: [版本、命令、必要环境信息及退出状态]
+- 临时资源目录: [TEST_TMP_ROOT 的实际绝对路径及必要的产物路径；未生成则写无]
+- 工具环境: [已有 / 临时准备；工具版本、来源、必要配置及实际验证的平台]
+- 资源状态: [已清理 / 临时保留：原因与清理条件 / 清理失败：残留路径与原因]
 - 测试账号/角色: [脱敏后的账号或角色]
 - 设备/浏览器/App 版本: [端侧测试必填]
 
@@ -313,13 +319,12 @@ tags:
 
 | 关键路径 | 关联用例 | 证据类型 | 证据位置/trace id | 结果 |
 |---------|---------|---------|------------------|------|
-| [状态流转/权限边界/数据写入等] | TC-XXX | 日志/trace/事件/截图 | `tester/artifacts/test-logs/...` 或 trace id | 通过/失败 |
+| [状态流转/权限边界/数据写入等] | TC-XXX | 日志/trace/事件/截图 | [关键摘要、trace id；临时路径及清理状态（如有）] | 通过/失败 |
 
-### 端侧审计留存
-- 控制台日志: `tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/console.log`
-- 网络摘要: `tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/network-summary.json`
-- 截图: `tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/screenshots/`
-- 录屏/trace（如有）: `tester/artifacts/test-logs/YYYYMMDD-HHMM-run-XXX/recordings/` / `traces/`
+### 端侧审计摘要
+- 控制台与网络: [必要结论、关键错误摘要，不粘贴完整原始数据]
+- UI/交互: [关键断言结果及失败复现步骤]
+- 截图/录屏/trace（如有）: [临时路径及清理状态；不复制或嵌入 Spec]
 - 脱敏检查: 已确认未保存 token、密码、密钥或真实用户隐私
 
 ## 发现的 Bug（如有）
@@ -357,6 +362,8 @@ tags:
 
 ### 步骤 7：通知 TeamLead 完成
 
+完成报告和策略判断后，按 [测试临时资源管理](references/temporary-resources.md) 停止本任务启动的进程，清理已无用途的临时工具、缓存和产物，更新报告中的清理状态；仍需排障的最小证据附保留原因和清理条件。确认仓库内没有遗留本轮生成物。
+
 先更新当前 Spec 的 `lead/team-context.md` 共享区：
 - 在 `Task Progress` 中追加或更新 spec-tester 的测试执行任务行
 - `status` 标记为 `done` 或 `blocked`（如仍有未解决问题）
@@ -393,7 +400,7 @@ tags:
 1. `tester/test-report.md` 已创建，包含所有测试结果
 2. 所有发现的 bug 都已由 spec-debugger 修复并重新验证
 3. 关键路径日志验证已记录到 `tester/test-report.md`
-4. 端侧测试审计日志已保存到当前 Spec 目录的 `tester/artifacts/test-logs/<run-id>/`
+4. 必要证据已按需采集到仓库外系统临时目录；报告可独立解释结论，无用工具、缓存和产物已清理，仍需排障的最小证据已记录保留原因和清理条件
 5. 已完成脱敏检查，未保存 token、密码、密钥或真实用户隐私
 6. 已完成测试策略沉淀判断；如需新增或更新策略，已获得用户确认并维护 `references/` 和策略表
 7. 已更新 `lead/team-context.md` 的 `Task Progress`、必要的 `Problem Resolution Log` 和修复循环中的 `Loop Budget`
@@ -403,7 +410,8 @@ tags:
 - 直接修复 bug 或绕过 TeamLead 联系 spec-debugger（破坏协作闭环）
 - `tester/test-plan.md` 验收标准不够具体（无法判断通过/失败）
 - 忘记在 `tester/test-report.md` 中引用 debug 文档
-- 端侧测试只看界面结果，没有保存 console/network/截图等审计证据
+- 端侧测试只看界面结果，未验证 console/network 或采集断言与排障需要的证据
+- 把原始覆盖率、截图、ZIP、录屏、日志或临时测试数据写进 Spec，或用完仍不清理
 - 关键路径没有日志或 trace id，导致失败后无法复盘
 - 审计日志包含未脱敏的 token、密码、密钥或真实用户隐私
 - 把可复用测试策略只写在 `tester/test-report.md`，没有沉淀到 `spec-test/references/`
